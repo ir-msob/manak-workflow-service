@@ -1,0 +1,50 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: workflow
+  profiles:
+    active: dev
+  main:
+    allow-bean-definition-overriding: true
+    web-application-type: REACTIVE
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/${spring.application.name}
+  kafka:
+    bootstrap-servers: localhost:9092
+    # Consumer configurations (optional)
+    consumer:
+      group-id: ${spring.application.name}
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      bootstrap-servers: localhost:9092
+    # Producer configurations (optional)
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      bootstrap-servers: localhost:9092
+
+  security:
+    oauth2:
+      resource-server:
+        jwt:
+          issuer-uri: http://localhost:8181/realms/test-realm
+      client:
+        provider:
+          service-client:
+            issuer-uri: ${spring.security.oauth2.resource-server.jwt.issuer-uri}
+        registration:
+          service-client:
+            client-name: service-client
+            client-id: service-client
+            client-secret: service-client-secret
+            authorization-grant-type: client_credentials
+            client-authentication-method: client_secret_basic
+            scope:
+              - openid
+jima:
+  feature:
+    database-type: mongo
+    database-enabled: true
