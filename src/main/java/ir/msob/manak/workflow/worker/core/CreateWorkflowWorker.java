@@ -34,12 +34,22 @@ public class CreateWorkflowWorker {
     private final UserService userService;
     private final CamundaService camundaService;
 
+    /**
+     * Main worker entry point for "create-workflow" jobs.
+     * <p>
+     * This method is fully reactive:
+     * - Does NOT call subscribe() directly to avoid blocking the reactive pipeline.
+     * - On success, records a SUCCESS worker history and completes the Camunda job with result variables.
+     * - On error, records an ERROR worker history, completes the Camunda job with an error result,
+     * and then rethrows the exception to propagate the error.
+     */
     @JobWorker(type = "create-workflow", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowSpecificationId = VariableHelper.safeString(vars.get(WORKFLOW_SPECIFICATION_ID_KEY));
 
-        logger.info("Start executing create-workflow job. jobKey={} workflowSpecificationId={}", job.getKey(), workflowSpecificationId);
+        // Log the start of the job execution
+        logger.info("Starting 'create-workflow' job. jobKey={} workflowSpecificationId={}", job.getKey(), workflowSpecificationId);
 
         // Holder for workflow ID to use in error handling
         AtomicReference<String> workflowIdHolder = new AtomicReference<>();
@@ -49,7 +59,7 @@ public class CreateWorkflowWorker {
                 .map(spec -> prepareWorkflow(spec, vars))
                 .flatMap(workflowDto -> workflowService.save(workflowDto, userService.getSystemUser()))
                 .doOnSuccess(saved -> {
-                    logger.info("Workflow saved. id={}", saved.getId());
+                    logger.info("Workflow saved successfully. workflowId={}", saved.getId());
                     workflowIdHolder.set(saved.getId());
                 })
                 .flatMap(savedWorkflow -> recordWorkerHistory(savedWorkflow)
@@ -88,3 +98,4 @@ public class CreateWorkflowWorker {
                 .then(Mono.error(ex));
     }
 }
+

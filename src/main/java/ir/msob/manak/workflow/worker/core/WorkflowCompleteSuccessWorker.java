@@ -31,12 +31,17 @@ public class WorkflowCompleteSuccessWorker {
     private final UserService userService;
     private final CamundaService camundaService;
 
+    /**
+     * Executes the workflow completion post-processing.
+     * Marks workflow as COMPLETED and updates the DB.
+     * Sends empty result map back to Camunda process.
+     */
     @JobWorker(type = "workflow-complete-success", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableHelper.safeString(vars.get(WORKFLOW_ID_KEY));
 
-        logger.info("Start executing post-processing job. jobKey={} workflowId={}", job.getKey(), workflowId);
+        logger.info("Starting workflow completion job. jobKey={}, workflowId={}", job.getKey(), workflowId);
 
         return workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
@@ -44,23 +49,34 @@ public class WorkflowCompleteSuccessWorker {
                 .flatMap(workflow -> workflowService.update(workflow, userService.getSystemUser()))
                 .flatMap(this::prepareResult)
                 .flatMap(result -> camundaService.complete(job, result))
-                .doOnSuccess(v -> logger.info("Post-processing job completed successfully. jobKey={}", job.getKey()))
-                .doOnError(ex -> logger.error("Post-processing job failed. jobKey={} error={}", job.getKey(), ex.getMessage(), ex))
+                .doOnSuccess(v -> logger.info("Workflow completion job finished successfully. jobKey={}", job.getKey()))
+                .doOnError(ex -> logger.error("Workflow completion job failed. jobKey={}, error={}", job.getKey(), ex.getMessage(), ex))
                 .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
     }
 
+    /**
+     * Marks the workflow as COMPLETED and sets endedAt timestamp.
+     */
     private Mono<WorkflowDto> prepareWorkflow(WorkflowDto workflow) {
         workflow.setEndedAt(Instant.now());
         workflow.setExecutionStatus(Workflow.WorkflowExecutionStatus.COMPLETED);
+        logger.debug("Workflow marked as COMPLETED. workflowId={}", workflow.getId());
         return Mono.just(workflow);
     }
 
+    /**
+     * Prepares result map for Camunda.
+     * For workflow completion, no process variables are returned.
+     */
     private Mono<Map<String, Object>> prepareResult(WorkflowDto workflow) {
         return Mono.just(Map.of());
     }
 
+    /**
+     * Handles errors: records them in workflow history, sends error to Camunda, then rethrows.
+     */
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
-        String errorMessage = "Post-processing job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
+        String errorMessage = "Workflow completion job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
         return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
                 .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));

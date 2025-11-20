@@ -48,24 +48,22 @@ public class StagePostProcessingWorker {
         String stageHistoryId = VariableHelper.safeString(vars.get(STAGE_HISTORY_ID_KEY));
         Map<String, Object> stageOutput = VariableHelper.safeMapStringObject(vars.get(STAGE_OUTPUT_KEY));
 
-        logger.info("Start executing post-processing job. jobKey={} workflowId={} stageKey={}", job.getKey(), workflowId, stageKey);
+        logger.info("Starting stage post-processing job. jobKey={}, workflowId={}, stageKey={}", job.getKey(), workflowId, stageKey);
 
         return workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
                 .flatMap(workflow -> prepareStageHistory(workflow, stageHistoryId, cycleId, stageExecutionStatus, stageExecutionError, stageOutput))
-                // pass stageKey and vars so updateContext can resolve sources like $processVariable.*
                 .flatMap(workflow -> updateContext(workflow, stageKey, cycleId, stageOutput, vars))
-                // update workflow in DB and then return collected process variables to be set on the process
                 .flatMap(tuple -> {
                     WorkflowDto wf = tuple.getT1();
                     Map<String, Object> processVarsToSet = tuple.getT2();
                     return workflowService.update(wf, userService.getSystemUser())
                             .thenReturn(processVarsToSet);
                 })
-                .flatMap(this::prepareResult) // prepareResult returns the map of process variables for Camunda
+                .flatMap(this::prepareResult)
                 .flatMap(result -> camundaService.complete(job, result))
-                .doOnSuccess(v -> logger.info("Post-processing job completed successfully. jobKey={}", job.getKey()))
-                .doOnError(ex -> logger.error("Post-processing job failed. jobKey={} error={}", job.getKey(), ex.getMessage(), ex))
+                .doOnSuccess(v -> logger.info("Stage post-processing job completed successfully. jobKey={}", job.getKey()))
+                .doOnError(ex -> logger.error("Stage post-processing job failed. jobKey={}, error={}", job.getKey(), ex.getMessage(), ex))
                 .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
     }
 
@@ -75,13 +73,14 @@ public class StagePostProcessingWorker {
         stageHistory.setExecutionStatus(Workflow.StageExecutionStatus.valueOf(stageExecutionStatus));
         stageHistory.setError(stageExecutionError);
         stageHistory.setEndedAt(Instant.now());
+        logger.debug("Stage history prepared. stageHistoryId={}, status={}, error={}", stageHistoryId, stageExecutionStatus, stageExecutionError);
         return Mono.just(workflow);
     }
 
     /**
-     * Update contexts according to output mapping and collect variables that should be returned to the process.
-     * <p>
-     * Returns Tuple2:
+     * Update workflow and cycle contexts based on stage output mapping, and collect process variables to return to the process.
+     *
+     * @return Tuple2:
      * - T1 = updated WorkflowDto
      * - T2 = Map of process variables to return (keys are variable names without "processVariable." prefix)
      */
@@ -93,9 +92,9 @@ public class StagePostProcessingWorker {
         Workflow.Cycle cycle = WorkflowUtil.findCycle(workflow, cycleId);
         WorkflowSpecification.StageSpec stageSpec = WorkflowUtil.findStageSpecByKey(workflow, stageKey);
 
-        // Expect outputMapping to be Map<String, Object> to allow literal objects/arrays as mapping values.
         Map<String, Object> outputMapping = stageSpec.getOutputMapping();
         if (outputMapping == null || outputMapping.isEmpty()) {
+            logger.debug("No output mapping defined for stage '{}', skipping context update.", stageKey);
             return Mono.just(Tuples.of(workflow, Map.of()));
         }
 
@@ -105,16 +104,9 @@ public class StagePostProcessingWorker {
             String destExpr = Objects.toString(destObj, null);
             if (destExpr == null) return;
 
-            // Resolve source value (can read from workflowContext, cycleContext, processVariable, or stageOutput,
-            // or be a literal value).
             Object value = resolveSourceValue(srcObj, workflow.getContext(), cycle.getContext(), processVariable, stageOutput);
+            if (value == null) return;
 
-            if (value == null) {
-                // skip nulls
-                return;
-            }
-
-            // Destination: strip leading $ if present
             String dest = destExpr.startsWith(VARIABLE_START_CHAR) ? destExpr.substring(1) : destExpr;
 
             if (dest.startsWith(CYCLE_CONTEXT_KEY + ".")) {
@@ -130,11 +122,11 @@ public class StagePostProcessingWorker {
                 processVarsToReturn.put(varName, value);
 
             } else {
-                // Unknown destination scope -> log a warning
                 logger.warn("Unknown output mapping destination '{}', ignoring.", destExpr);
             }
         });
 
+        logger.debug("Context update complete for stage '{}'. Process variables to return: {}", stageKey, processVarsToReturn.keySet());
         return Mono.just(Tuples.of(workflow, processVarsToReturn));
     }
 

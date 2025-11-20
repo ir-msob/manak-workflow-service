@@ -33,13 +33,23 @@ public class FlowCompleteErrorWorker {
     private final UserService userService;
     private final CamundaService camundaService;
 
+    /**
+     * Worker entry point for "flow-complete-error" jobs.
+     * <p>
+     * This method is fully reactive:
+     * - Marks the workflow and the associated cycle as COMPLETED.
+     * - Updates the workflow, prepares the result, and completes the Camunda job.
+     * - On error, records an ERROR worker history, completes the Camunda job with error details,
+     * and rethrows the exception.
+     */
     @JobWorker(type = "flow-complete-error", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableHelper.safeString(vars.get(WORKFLOW_ID_KEY));
         String cycleId = VariableHelper.safeString(vars.get(CYCLE_ID_KEY));
 
-        logger.info("Start executing post-processing job. jobKey={} workflowId={}", job.getKey(), workflowId);
+        // Log the start of the job execution
+        logger.info("Starting 'flow-complete-error' job. jobKey={} workflowId={} cycleId={}", job.getKey(), workflowId, cycleId);
 
         return workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
@@ -48,8 +58,8 @@ public class FlowCompleteErrorWorker {
                 .flatMap(workflow -> workflowService.update(workflow, userService.getSystemUser()))
                 .flatMap(this::prepareResult)
                 .flatMap(result -> camundaService.complete(job, result))
-                .doOnSuccess(v -> logger.info("Post-processing job completed successfully. jobKey={}", job.getKey()))
-                .doOnError(ex -> logger.error("Post-processing job failed. jobKey={} error={}", job.getKey(), ex.getMessage(), ex))
+                .doOnSuccess(v -> logger.info("Flow-complete-error job completed successfully. jobKey={} cycleId={}", job.getKey(), cycleId))
+                .doOnError(ex -> logger.error("Flow-complete-error job failed. jobKey={} cycleId={} error={}", job.getKey(), cycleId, ex.getMessage(), ex))
                 .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
     }
 
@@ -67,11 +77,12 @@ public class FlowCompleteErrorWorker {
     }
 
     private Mono<Map<String, Object>> prepareResult(WorkflowDto workflow) {
+        // Currently no result variables are returned
         return Mono.just(Map.of());
     }
 
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
-        String errorMessage = "Post-processing job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
+        String errorMessage = "Flow-complete-error job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
         return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
                 .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));

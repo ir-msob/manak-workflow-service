@@ -32,34 +32,37 @@ public class CreateCycleWorker {
     private final IdService idService;
 
     /**
-     * Main worker entry point. The method is fully reactive and avoids direct subscribe() calls
-     * in non-blocking contexts. On success it writes a SUCCESS worker history entry and completes
-     * the Camunda job with result variables. On error it attempts to write an ERROR worker history
-     * entry and complete the Camunda job with an error message, then rethrows the error.
+     * Main worker entry point for "create-cycle" jobs.
+     * <p>
+     * This method is fully reactive:
+     * - Does NOT call subscribe() directly to avoid blocking the reactive pipeline.
+     * - On success, records a SUCCESS worker history and completes the Camunda job with result variables.
+     * - On error, records an ERROR worker history, completes the Camunda job with an error result,
+     * and then rethrows the exception to propagate the error.
      */
     @JobWorker(type = "create-cycle", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableHelper.safeString(vars.get(WORKFLOW_ID_KEY));
 
-        // Log the start of the execution with job details
-        logger.info("Start executing create-cycle job. jobKey={} workflowId={}", job.getKey(), workflowId);
+        // Log the start of the job execution
+        logger.info("Starting 'create-cycle' job. jobKey={} workflowId={}", job.getKey(), workflowId);
+
         Workflow.Cycle cycle = prepareCycle();
 
         return workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new IllegalStateException("Workflow not found: " + workflowId)))
                 .flatMap(workflowDto -> {
-                    workflowDto.getCycles().add(cycle);  // Add the new cycle
-                    return workflowService.save(workflowDto, userService.getSystemUser())
-                            .map(savedWorkflow -> savedWorkflow);
+                    workflowDto.getCycles().add(cycle); // Add the new cycle
+                    return workflowService.save(workflowDto, userService.getSystemUser());
                 })
-                .doOnSuccess(saved -> logger.info("Cycle created and workflow saved. workflowId={}", saved.getId()))
+                .doOnSuccess(saved -> logger.info("Cycle created and workflow saved successfully. workflowId={}", saved.getId()))
                 .flatMap(savedWorkflow -> recordWorkerHistory(savedWorkflow.getId())
                         .then(Mono.just(cycle)))
                 .flatMap(this::prepareResult)
                 .flatMap(result -> camundaService.complete(job, result))
-                .doOnSuccess(v -> logger.info("Create cycle job completed successfully. jobKey={}", job.getKey()))
-                .doOnError(ex -> logger.error("Create cycle job failed. jobKey={} error={}", job.getKey(), ex.getMessage(), ex))
+                .doOnSuccess(v -> logger.info("Job completed successfully. jobKey={}", job.getKey()))
+                .doOnError(ex -> logger.error("Job execution failed. jobKey={} error={}", job.getKey(), ex.getMessage(), ex))
                 .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
     }
 
@@ -89,3 +92,4 @@ public class CreateCycleWorker {
                 .then(Mono.error(ex));
     }
 }
+

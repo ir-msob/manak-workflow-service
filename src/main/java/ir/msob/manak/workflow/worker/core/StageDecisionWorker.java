@@ -33,6 +33,15 @@ public class StageDecisionWorker {
     private final UserService userService;
     private final CamundaService camundaService;
 
+    /**
+     * Worker entry point for "stage-decision" jobs.
+     *
+     * This method is fully reactive:
+     * - Determines the next stage in the workflow based on the previous stage's output.
+     * - Records SUCCESS worker history and completes the Camunda job with next stage info.
+     * - On error, records ERROR worker history, completes the Camunda job with error info,
+     *   and rethrows the exception.
+     */
     @JobWorker(type = "stage-decision", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
@@ -41,16 +50,17 @@ public class StageDecisionWorker {
         String previousStageHistoryId = VariableHelper.safeString(vars.get(STAGE_HISTORY_ID_KEY));
         String previousStageKey = VariableHelper.safeString(vars.get(STAGE_KEY_KEY));
 
-        logger.info("Start executing stage-decision job. jobKey={} workflowId={} stageKey={}", job.getKey(), workflowId, previousStageKey);
+        // Log the start of the job execution
+        logger.info("Starting 'stage-decision' job. jobKey={} workflowId={} previousStageKey={}", job.getKey(), workflowId, previousStageKey);
 
         return workflowService.getOne(workflowId, userService.getSystemUser())
-                .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId))) // Workflow not found exception
+                .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
                 .flatMap(workflowDto -> determineNextStage(workflowDto, cycleId, previousStageHistoryId, previousStageKey))
                 .flatMap(nextStage -> workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.SUCCESS, null)
                         .then(Mono.just(nextStage)))
                 .flatMap(this::prepareResult)
                 .flatMap(result -> camundaService.complete(job, result))
-                .doOnSuccess(v -> logger.info("Stage-decision job completed successfully. jobKey={}", job.getKey()))
+                .doOnSuccess(v -> logger.info("Stage-decision job completed successfully. jobKey={} nextStageKey={}", job.getKey(), previousStageKey))
                 .doOnError(ex -> logger.error("Stage-decision job failed. jobKey={} error={}", job.getKey(), ex.getMessage(), ex))
                 .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
     }
@@ -63,7 +73,8 @@ public class StageDecisionWorker {
     }
 
     private Mono<WorkflowSpecification.StageSpec> determineNextStage(Workflow workflowDto, String cycleId, String previousStageHistoryId, String previousStageKey) {
-        if (Strings.isBlank(previousStageKey)) {
+        if (previousStageKey == null || previousStageKey.isBlank()) {
+            // If no previous stage, return the first stage
             return Mono.just(WorkflowUtil.findFirstStageSpec(workflowDto));
         } else {
             return Mono.just(findNextStage(workflowDto, cycleId, previousStageHistoryId, previousStageKey));
@@ -97,4 +108,3 @@ public class StageDecisionWorker {
                 .then(Mono.error(ex));
     }
 }
-
