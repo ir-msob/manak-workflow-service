@@ -1,7 +1,7 @@
 package ir.msob.manak.workflow.worker.util;
 
 import ir.msob.jima.core.commons.exception.runtime.CommonRuntimeException;
-import ir.msob.manak.domain.model.workflow.workflow.Workflow;
+import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 
 import java.util.Collections;
 import java.util.Map;
@@ -54,7 +54,7 @@ public class VariableHelper {
 
     public static Map<String, Object> prepareErrorResult(String errorMessage) {
         return Map.of(
-                WORKER_EXECUTION_STATUS_KEY, Workflow.WorkerExecutionStatus.ERROR,
+                WORKER_EXECUTION_STATUS_KEY, WorkerExecutionStatus.ERROR,
                 WORKER_EXECUTION_ERROR_KEY, errorMessage
         );
     }

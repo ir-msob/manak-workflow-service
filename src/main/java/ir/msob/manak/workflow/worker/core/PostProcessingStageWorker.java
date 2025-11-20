@@ -6,6 +6,7 @@ import ir.msob.jima.core.commons.exception.datanotfound.DataNotFoundException;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
+import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecification;
@@ -69,7 +70,7 @@ public class PostProcessingStageWorker {
     private Mono<WorkflowDto> updateStageHistory(WorkflowDto workflow, String stageHistoryId, String cycleId, Map<String, Object> outputData) {
         Workflow.StageHistory stageHistory = WorkflowUtil.findStageHistory(workflow, cycleId, stageHistoryId);
         stageHistory.setStageOutput(outputData);
-        stageHistory.setExecutionStatus(Workflow.StageHistoryExecutionStatus.SUCCESS);
+        stageHistory.setExecutionStatus(Workflow.StageExecutionStatus.SUCCESS);
         stageHistory.setEndedAt(Instant.now());
         return Mono.just(workflow);
     }
@@ -232,7 +233,7 @@ public class PostProcessingStageWorker {
 
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Post-processing job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
-        return workflowService.recordWorkerHistory(workflowId, Workflow.WorkerExecutionStatus.ERROR, errorMessage)
+        return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
                 .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));
     }

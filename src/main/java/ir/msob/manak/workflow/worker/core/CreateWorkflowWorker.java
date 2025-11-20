@@ -5,6 +5,7 @@ import io.camunda.client.api.response.ActivatedJob;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
+import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecificationDto;
@@ -61,11 +62,14 @@ public class CreateWorkflowWorker {
     }
 
     private Mono<Void> recordWorkerHistory(WorkflowDto workflowDto) {
-        return workflowService.recordWorkerHistory(workflowDto.getId(), Workflow.WorkerExecutionStatus.SUCCESS, null);
+        return workflowService.recordWorkerHistory(workflowDto.getId(), WorkerExecutionStatus.SUCCESS, null);
     }
 
     private Mono<Map<String, Object>> prepareResult(WorkflowDto workflowDto) {
-        return Mono.just(Map.of(WORKFLOW_ID_KEY, workflowDto.getId()));
+        return Mono.just(Map.of(
+                WORKFLOW_ID_KEY, workflowDto.getId(),
+                WORKFLOW_EXECUTION_STATUS_KEY, Workflow.WorkflowExecutionStatus.IN_PROGRESS
+        ));
     }
 
     private WorkflowDto prepareWorkflow(WorkflowSpecificationDto spec, Map<String, Object> vars) {
@@ -79,7 +83,7 @@ public class CreateWorkflowWorker {
 
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Create workflow job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
-        return workflowService.recordWorkerHistory(workflowId, Workflow.WorkerExecutionStatus.ERROR, errorMessage)
+        return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
                 .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));
     }

@@ -11,6 +11,7 @@ import ir.msob.manak.core.service.jima.crud.base.childdomain.ChildDomainCrudServ
 import ir.msob.manak.core.service.jima.crud.base.domain.DomainCrudService;
 import ir.msob.manak.core.service.jima.security.UserService;
 import ir.msob.manak.core.service.jima.service.IdService;
+import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowCriteria;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
@@ -78,7 +79,7 @@ public class WorkflowService extends DomainCrudService<Workflow, WorkflowDto, Wo
      * If workflowId is null or empty, this method completes without doing anything.
      */
     @Transactional
-    public Mono<Void> recordWorkerHistory(String workflowId, Workflow.WorkerExecutionStatus status, String error) {
+    public Mono<Void> recordWorkerHistory(String workflowId, WorkerExecutionStatus status, String error) {
         if (workflowId == null || workflowId.isBlank()) {
             logger.warn("No workflow id available to record worker history. skipping history write.");
             return Mono.empty();
@@ -94,7 +95,7 @@ public class WorkflowService extends DomainCrudService<Workflow, WorkflowDto, Wo
                 .onErrorResume(e -> Mono.empty()); // don't fail main flow just because history write failed
     }
 
-    private Workflow.WorkerHistory prepareWorkerHistory(Workflow.WorkerExecutionStatus workerExecutionStatus, String error) {
+    private Workflow.WorkerHistory prepareWorkerHistory(WorkerExecutionStatus workerExecutionStatus, String error) {
         return Workflow.WorkerHistory.builder()
                 .executionStatus(workerExecutionStatus)
                 .error(error)

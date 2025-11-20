@@ -7,6 +7,7 @@ import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
 import ir.msob.manak.core.service.jima.service.IdService;
+import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecification;
 import ir.msob.manak.workflow.camunda.CamundaService;
@@ -64,7 +65,7 @@ public class PreProcessingStageWorker {
     private Mono<Workflow.StageHistory> createStageHistory(String stageKey, Map<String, Object> inputData) {
         return Mono.just(Workflow.StageHistory.builder()
                 .id(idService.newId()).stageKey(stageKey)
-                .executionStatus(Workflow.StageHistoryExecutionStatus.INITIALIZED)
+                .executionStatus(Workflow.StageExecutionStatus.INITIALIZED)
                 .stageInput(inputData).startedAt(Instant.now()).build());
     }
 
@@ -125,7 +126,7 @@ public class PreProcessingStageWorker {
     }
 
     private Mono<Void> recordWorkerHistory(String workflowId) {
-        return workflowService.recordWorkerHistory(workflowId, Workflow.WorkerExecutionStatus.SUCCESS, null);
+        return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.SUCCESS, null);
     }
 
     private Mono<Map<String, Object>> prepareResult(Workflow.StageHistory stageHistory) {
@@ -134,7 +135,7 @@ public class PreProcessingStageWorker {
 
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Pre-processing job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
-        return workflowService.recordWorkerHistory(workflowId, Workflow.WorkerExecutionStatus.ERROR, errorMessage)
+        return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
                 .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));
     }

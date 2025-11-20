@@ -6,6 +6,7 @@ import ir.msob.jima.core.commons.exception.datanotfound.DataNotFoundException;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
+import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecification;
 import ir.msob.manak.workflow.camunda.CamundaService;
@@ -45,7 +46,7 @@ public class StageDecisionWorker {
         return workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId))) // Workflow not found exception
                 .flatMap(workflowDto -> determineNextStage(workflowDto, cycleId, previousStageHistoryId, previousStageKey))
-                .flatMap(nextStage -> workflowService.recordWorkerHistory(workflowId, Workflow.WorkerExecutionStatus.SUCCESS, null)
+                .flatMap(nextStage -> workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.SUCCESS, null)
                         .then(Mono.just(nextStage)))
                 .flatMap(this::prepareResult)
                 .flatMap(result -> camundaService.complete(job, result))
@@ -91,7 +92,7 @@ public class StageDecisionWorker {
 
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Stage-decision job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
-        return workflowService.recordWorkerHistory(workflowId, Workflow.WorkerExecutionStatus.ERROR, errorMessage)
+        return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
                 .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));
     }

@@ -6,6 +6,7 @@ import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
 import ir.msob.manak.core.service.jima.service.IdService;
+import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.workflow.camunda.CamundaService;
 import ir.msob.manak.workflow.worker.util.VariableHelper;
@@ -17,8 +18,7 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.util.Map;
 
-import static ir.msob.manak.workflow.worker.Constants.CYCLE_ID_KEY;
-import static ir.msob.manak.workflow.worker.Constants.WORKFLOW_ID_KEY;
+import static ir.msob.manak.workflow.worker.Constants.*;
 
 @Component
 @RequiredArgsConstructor
@@ -72,16 +72,19 @@ public class CreateCycleWorker {
     }
 
     private Mono<Void> recordWorkerHistory(String workflowId) {
-        return workflowService.recordWorkerHistory(workflowId, Workflow.WorkerExecutionStatus.SUCCESS, null);
+        return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.SUCCESS, null);
     }
 
     private Mono<Map<String, Object>> prepareResult(Workflow.Cycle cycle) {
-        return Mono.just(Map.of(CYCLE_ID_KEY, cycle.getId()));
+        return Mono.just(Map.of(
+                CYCLE_ID_KEY, cycle.getId(),
+                CYCLE_EXECUTION_STATUS_KEY, Workflow.CycleExecutionStatus.IN_PROGRESS
+        ));
     }
 
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Create cycle job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
-        return workflowService.recordWorkerHistory(workflowId, Workflow.WorkerExecutionStatus.ERROR, errorMessage)
+        return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
                 .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));
     }
