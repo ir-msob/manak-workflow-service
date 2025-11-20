@@ -1,0 +1,19 @@
+package ir.msob.manak.workflow.worker;
+
+public class Constants {
+    public static final String ACTION_KEY = "action";
+    public static final String PARAMS_KEY = "params";
+    public static final String WORKFLOW_SPECIFICATION_ID_KEY = "workflowSpecificationId";
+    public static final String WORKFLOW_ID_KEY = "workflowId";
+    public static final String STAGE_KEY_KEY = "stageKey";
+    public static final String STAGE_TYPE_KEY = "stageType";
+    public static final String CYCLE_ID_KEY = "cycleId";
+    public static final String STAGE_HISTORY_ID_KEY = "stageHistoryId";
+    public static final String CORRELATION_ID_KEY = "correlationId";
+    public static final String WORKER_EXECUTION_STATUS_KEY = "workerExecutionStatus";
+    public static final String WORKER_EXECUTION_ERROR_KEY = "workerExecutionError";
+
+
+    public Constants() {
+    }
+}

@@ -1,75 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>ir.msob.manak.parent</groupId>
-    <artifactId>manak-parent</artifactId>
-    <version>0.1.0</version>
-  </parent>
-  <artifactId>workflow-service</artifactId>
-  <name>workflow</name>
-  <description>Workflow Service</description>
-  <properties>
-    <!-- Manak Version -->
-    <manak-parent.version>0.1.0</manak-parent.version>
-    <manak-domain.version>0.1.0</manak-domain.version>
-  </properties>
-  <dependencyManagement>
-    <dependencies>
-      <!-- Jima BOM -->
-      <dependency>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
         <groupId>ir.msob.manak.parent</groupId>
-        <artifactId>manak-bom</artifactId>
-        <version>${manak-parent.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
+        <artifactId>manak-parent</artifactId>
+        <version>0.1.0</version>
+    </parent>
+    <artifactId>workflow-service</artifactId>
+    <name>workflow</name>
+    <description>Workflow Service</description>
+    <properties>
+        <!-- Manak Version -->
+        <manak-parent.version>0.1.0</manak-parent.version>
+        <manak-domain.version>0.1.0</manak-domain.version>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <!-- Jima BOM -->
+            <dependency>
+                <groupId>ir.msob.manak.parent</groupId>
+                <artifactId>manak-bom</artifactId>
+                <version>${manak-parent.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>ir.msob.manak.domain</groupId>
+            <artifactId>domain-service</artifactId>
+            <version>${manak-domain.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ir.msob.jima.security</groupId>
+            <artifactId>security-starter-restful-oauth2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ir.msob.jima.crud</groupId>
+            <artifactId>crud-starter-mongo</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.camunda</groupId>
+            <artifactId>spring-boot-starter-camunda-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ir.msob.jima.crud</groupId>
+            <artifactId>crud-starter-mongo-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ir.msob.manak.domain</groupId>
+            <artifactId>domain-test</artifactId>
+            <version>${manak-domain.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ir.msob.jima.security</groupId>
+            <artifactId>security-starter-keycloak-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-  </dependencyManagement>
-  <dependencies>
-    <dependency>
-      <groupId>ir.msob.manak.domain</groupId>
-      <artifactId>domain-service</artifactId>
-      <version>${manak-domain.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-security</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ir.msob.jima.security</groupId>
-      <artifactId>security-starter-restful-oauth2</artifactId>
-    </dependency>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
 
-    <dependency>
-        <groupId>ir.msob.jima.crud</groupId>
-        <artifactId>crud-starter-mongo</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-mongodb</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
-    </dependency>
-
-    <dependency>
-        <groupId>ir.msob.jima.crud</groupId>
-        <artifactId>crud-starter-mongo-test</artifactId>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ir.msob.manak.domain</groupId>
-      <artifactId>domain-test</artifactId>
-      <version>${manak-domain.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ir.msob.jima.security</groupId>
-      <artifactId>security-starter-keycloak-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${projectlombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
