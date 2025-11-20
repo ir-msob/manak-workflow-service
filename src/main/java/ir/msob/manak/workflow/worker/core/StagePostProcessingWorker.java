@@ -29,20 +29,22 @@ import static ir.msob.manak.workflow.worker.Constants.*;
 
 @Component
 @RequiredArgsConstructor
-public class PostProcessingStageWorker {
+public class StagePostProcessingWorker {
 
-    private static final Logger logger = LoggerFactory.getLogger(PostProcessingStageWorker.class);
+    private static final Logger logger = LoggerFactory.getLogger(StagePostProcessingWorker.class);
 
     private final WorkflowService workflowService;
     private final UserService userService;
     private final CamundaService camundaService;
 
-    @JobWorker(type = "post-processing-stage", autoComplete = false)
+    @JobWorker(type = "stage-post-processing", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableHelper.safeString(vars.get(WORKFLOW_ID_KEY));
         String cycleId = VariableHelper.safeString(vars.get(CYCLE_ID_KEY));
         String stageKey = VariableHelper.safeString(vars.get(STAGE_KEY_KEY));
+        String stageExecutionStatus = VariableHelper.safeString(vars.get(STAGE_EXECUTION_STATUS_KEY));
+        String stageExecutionError = VariableHelper.safeString(vars.get(STAGE_EXECUTION_ERROR_KEY));
         String stageHistoryId = VariableHelper.safeString(vars.get(STAGE_HISTORY_ID_KEY));
         Map<String, Object> stageOutput = VariableHelper.safeMapStringObject(vars.get(STAGE_OUTPUT_KEY));
 
@@ -50,7 +52,7 @@ public class PostProcessingStageWorker {
 
         return workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
-                .flatMap(workflow -> updateStageHistory(workflow, stageHistoryId, cycleId, stageOutput))
+                .flatMap(workflow -> prepareStageHistory(workflow, stageHistoryId, cycleId, stageExecutionStatus, stageExecutionError, stageOutput))
                 // pass stageKey and vars so updateContext can resolve sources like $processVariable.*
                 .flatMap(workflow -> updateContext(workflow, stageKey, cycleId, stageOutput, vars))
                 // update workflow in DB and then return collected process variables to be set on the process
@@ -67,10 +69,11 @@ public class PostProcessingStageWorker {
                 .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
     }
 
-    private Mono<WorkflowDto> updateStageHistory(WorkflowDto workflow, String stageHistoryId, String cycleId, Map<String, Object> outputData) {
+    private Mono<WorkflowDto> prepareStageHistory(WorkflowDto workflow, String stageHistoryId, String cycleId, String stageExecutionStatus, String stageExecutionError, Map<String, Object> outputData) {
         Workflow.StageHistory stageHistory = WorkflowUtil.findStageHistory(workflow, cycleId, stageHistoryId);
         stageHistory.setStageOutput(outputData);
-        stageHistory.setExecutionStatus(Workflow.StageExecutionStatus.SUCCESS);
+        stageHistory.setExecutionStatus(Workflow.StageExecutionStatus.valueOf(stageExecutionStatus));
+        stageHistory.setError(stageExecutionError);
         stageHistory.setEndedAt(Instant.now());
         return Mono.just(workflow);
     }

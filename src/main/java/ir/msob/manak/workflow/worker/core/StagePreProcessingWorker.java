@@ -26,14 +26,14 @@ import static ir.msob.manak.workflow.worker.Constants.*;
 
 @Component
 @RequiredArgsConstructor
-public class PreProcessingStageWorker {
-    private static final Logger logger = LoggerFactory.getLogger(PreProcessingStageWorker.class);
+public class StagePreProcessingWorker {
+    private static final Logger logger = LoggerFactory.getLogger(StagePreProcessingWorker.class);
     private final WorkflowService workflowService;
     private final UserService userService;
     private final CamundaService camundaService;
     private final IdService idService;
 
-    @JobWorker(type = "pre-processing-stage", autoComplete = false)
+    @JobWorker(type = "stage-pre-processing", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableHelper.safeString(vars.get(WORKFLOW_ID_KEY));
@@ -130,7 +130,11 @@ public class PreProcessingStageWorker {
     }
 
     private Mono<Map<String, Object>> prepareResult(Workflow.StageHistory stageHistory) {
-        return Mono.just(Map.of(STAGE_HISTORY_ID_KEY, stageHistory.getId()));
+        return Mono.just(Map.of(
+                STAGE_HISTORY_ID_KEY, stageHistory.getId(),
+                STAGE_EXECUTION_STATUS_KEY, Workflow.StageExecutionStatus.INITIALIZED,
+                STAGE_EXECUTION_ERROR_KEY, ""
+        ));
     }
 
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
