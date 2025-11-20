@@ -64,7 +64,7 @@ public class PreProcessingStageWorker {
     private Mono<Workflow.StageHistory> createStageHistory(String stageKey, Map<String, Object> inputData) {
         return Mono.just(Workflow.StageHistory.builder()
                 .id(idService.newId()).stageKey(stageKey)
-                .executionStatus(Workflow.StageExecutionStatus.INITIALIZED)
+                .executionStatus(Workflow.StageHistoryExecutionStatus.INITIALIZED)
                 .stageInput(inputData).startedAt(Instant.now()).build());
     }
 
@@ -76,8 +76,8 @@ public class PreProcessingStageWorker {
             WorkflowSpecification.StageSpec stageSpec = WorkflowUtil.findStageSpecByKey(workflowDto, stageKey);
             Map<String, Object> inputData = new HashMap<>();
             if (stageSpec.getInputMapping() != null) {
-                stageSpec.getInputMapping().forEach((inputKey, mappingPath) -> {
-                    Object value = resolveMapping(mappingPath, workflowContext, cycleContext, processVariable);
+                stageSpec.getInputMapping().forEach((inputKey, mappingValue) -> {
+                    Object value = resolveMapping(mappingValue, workflowContext, cycleContext, processVariable);
                     if (value != null) {
                         inputData.put(inputKey, value);
                     }
@@ -87,17 +87,30 @@ public class PreProcessingStageWorker {
         });
     }
 
-    private Object resolveMapping(String mappingPath, Map<String, Object> workflowContext, Map<String, Object> cycleContext, Map<String, Object> processVariable) {
-        if (mappingPath.startsWith("workflowContext.")) {
-            return getValueByPath(workflowContext, mappingPath.substring("workflowContext.".length()));
-        } else if (mappingPath.startsWith("cycleContext.")) {
-            return getValueByPath(cycleContext, mappingPath.substring("cycleContext.".length()));
-        } else if (mappingPath.startsWith("processVariable.")) {
-            return getValueByPath(processVariable, mappingPath.substring("processVariable.".length()));
-        } else {
-            return mappingPath;
+    private Object resolveMapping(Object mappingValue,
+                                  Map<String, Object> workflowContext,
+                                  Map<String, Object> cycleContext,
+                                  Map<String, Object> processVariable) {
+        if (!(mappingValue instanceof String mappingStr)) {
+            return mappingValue;
         }
+
+        if (!mappingStr.startsWith(VARIABLE_START_CHAR)) {
+            return mappingStr;
+        }
+
+        String expr = mappingStr.substring(1);
+
+        if (expr.startsWith(WORKFLOW_CONTEXT_KEY + ".")) {
+            return getValueByPath(workflowContext, expr.substring((WORKFLOW_CONTEXT_KEY + ".").length()));
+        } else if (expr.startsWith(CYCLE_CONTEXT_KEY + ".")) {
+            return getValueByPath(cycleContext, expr.substring((CYCLE_CONTEXT_KEY + ".").length()));
+        } else if (expr.startsWith(PROCESS_VARIABLE_KEY + ".")) {
+            return getValueByPath(processVariable, expr.substring((PROCESS_VARIABLE_KEY + ".").length()));
+        }
+        return null;
     }
+
 
     @SuppressWarnings("unchecked")
     private Object getValueByPath(Map<String, Object> context, String path) {

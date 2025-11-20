@@ -72,7 +72,7 @@ public class CreateWorkflowWorker {
         return WorkflowDto.builder()
                 .specification(spec)
                 .correlationId(VariableHelper.safeString(vars.get(CORRELATION_ID_KEY)))
-                .executionStatus(Workflow.WorkflowExecutionStatus.INITIALIZED)
+                .executionStatus(Workflow.WorkflowExecutionStatus.IN_PROGRESS)
                 .startedAt(Instant.now())
                 .build();
     }

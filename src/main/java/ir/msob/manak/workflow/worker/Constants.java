@@ -13,7 +13,10 @@ public class Constants {
     public static final String CORRELATION_ID_KEY = "correlationId";
     public static final String WORKER_EXECUTION_STATUS_KEY = "workerExecutionStatus";
     public static final String WORKER_EXECUTION_ERROR_KEY = "workerExecutionError";
-
+    public static final String WORKFLOW_CONTEXT_KEY = "workflowContext";
+    public static final String CYCLE_CONTEXT_KEY = "cycleContext";
+    public static final String PROCESS_VARIABLE_KEY = "processVariable";
+    public static final String VARIABLE_START_CHAR = "$";
 
     public Constants() {
     }

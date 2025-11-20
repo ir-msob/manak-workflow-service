@@ -31,6 +31,7 @@ public class WorkflowSpecificationDataProvider extends DomainCrudDataProvider<Wo
 
     private static WorkflowSpecificationDto newDto;
     private static WorkflowSpecificationDto newMandatoryDto;
+
     protected WorkflowSpecificationDataProvider(BaseIdService idService, ObjectMapper objectMapper, WorkflowSpecificationService service) {
         super(idService, objectMapper, service);
     }
