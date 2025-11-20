@@ -18,7 +18,7 @@ import static ir.msob.jima.core.commons.operation.Operations.*;
 @ConditionalOnOperation(operations = {SAVE, UPDATE_BY_ID, DELETE_BY_ID, EDIT_BY_ID, GET_BY_ID, GET_PAGE})
 @Resource(value = Workflow.DOMAIN_NAME_WITH_HYPHEN, type = ResourceType.RESTFUL)
 public class WorkflowRestResource extends DomainCrudRestResource<Workflow, WorkflowDto, WorkflowCriteria, WorkflowRepository, WorkflowService> {
-    public static final String BASE_URI = "/api/v1/" +Workflow.DOMAIN_NAME_WITH_HYPHEN;
+    public static final String BASE_URI = "/api/v1/" + Workflow.DOMAIN_NAME_WITH_HYPHEN;
 
     protected WorkflowRestResource(UserService userService, WorkflowService service) {
         super(userService, service);

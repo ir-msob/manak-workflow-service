@@ -10,6 +10,7 @@ import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecification;
 import ir.msob.manak.workflow.camunda.CamundaService;
 import ir.msob.manak.workflow.worker.util.VariableHelper;
+import ir.msob.manak.workflow.worker.util.WorkflowUtil;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
@@ -62,39 +63,16 @@ public class StageDecisionWorker {
 
     private Mono<WorkflowSpecification.StageSpec> determineNextStage(Workflow workflowDto, String cycleId, String previousStageHistoryId, String previousStageKey) {
         if (Strings.isBlank(previousStageKey)) {
-            return Mono.just(findFirstStage(workflowDto));
+            return Mono.just(WorkflowUtil.findFirstStageSpec(workflowDto));
         } else {
             return Mono.just(findNextStage(workflowDto, cycleId, previousStageHistoryId, previousStageKey));
         }
     }
 
-    private WorkflowSpecification.StageSpec findFirstStage(Workflow workflowDto) {
-        return workflowDto.getSpecification().getStages().stream()
-                .filter(WorkflowSpecification.StageSpec::isFirstStage)
-                .findFirst()
-                .orElseThrow(() -> new DataNotFoundException("First stage not found in workflow specification"));
-    }
-
     private WorkflowSpecification.StageSpec findNextStage(Workflow workflowDto, String cycleId, String previousStageHistoryId, String previousStageKey) {
-        WorkflowSpecification.StageSpec currentStage = findStageByKey(workflowDto, previousStageKey);
-        Workflow.StageHistory stageHistory = findStageHistory(workflowDto, cycleId, previousStageHistoryId);
+        WorkflowSpecification.StageSpec currentStage = WorkflowUtil.findStageSpecByKey(workflowDto, previousStageKey);
+        Workflow.StageHistory stageHistory = WorkflowUtil.findStageHistory(workflowDto, cycleId, previousStageHistoryId);
         return getNextStage(workflowDto, currentStage.getTransitions(), stageHistory);
-    }
-
-    private WorkflowSpecification.StageSpec findStageByKey(Workflow workflowDto, String stageKey) {
-        return workflowDto.getSpecification().getStages().stream()
-                .filter(ss -> ss.getKey().equalsIgnoreCase(stageKey))
-                .findFirst()
-                .orElseThrow(() -> new DataNotFoundException("Stage not found: " + stageKey));
-    }
-
-    private Workflow.StageHistory findStageHistory(Workflow workflowDto, String cycleId, String stageHistoryId) {
-        return workflowDto.getCycles().stream()
-                .filter(cycle -> cycle.getId().equalsIgnoreCase(cycleId))
-                .flatMap(cycle -> cycle.getStagesHistory().stream())
-                .filter(stageHistory -> stageHistory.getId().equalsIgnoreCase(stageHistoryId))
-                .findFirst()
-                .orElseThrow(() -> new DataNotFoundException("Stage history not found: " + stageHistoryId));
     }
 
     private WorkflowSpecification.StageSpec getNextStage(Workflow workflowDto, List<WorkflowSpecification.Transition> transitions, Workflow.StageHistory stageHistory) {
@@ -105,12 +83,11 @@ public class StageDecisionWorker {
                         return value != null && value.toString().equalsIgnoreCase(e.getValue());
                     });
             if (match) {
-                return findStageByKey(workflowDto, transition.getGoTo());
+                return WorkflowUtil.findStageSpecByKey(workflowDto, transition.getGoTo());
             }
         }
         throw new DataNotFoundException("No valid transition found for the current stage and variables");
     }
-
 
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Stage-decision job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();

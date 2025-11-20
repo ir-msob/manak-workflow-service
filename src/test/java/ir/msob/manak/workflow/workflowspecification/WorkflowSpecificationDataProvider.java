@@ -8,12 +8,12 @@ import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchOperation;
 import com.github.fge.jsonpatch.ReplaceOperation;
 import ir.msob.jima.core.commons.id.BaseIdService;
-import org.assertj.core.api.Assertions;
 import ir.msob.manak.core.test.jima.crud.base.domain.DomainCrudDataProvider;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecification;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecificationCriteria;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecificationDto;
 import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -29,12 +29,11 @@ import static ir.msob.jima.core.test.CoreTestData.UPDATED_STRING;
 @Component
 public class WorkflowSpecificationDataProvider extends DomainCrudDataProvider<WorkflowSpecification, WorkflowSpecificationDto, WorkflowSpecificationCriteria, WorkflowSpecificationRepository, WorkflowSpecificationService> {
 
+    private static WorkflowSpecificationDto newDto;
+    private static WorkflowSpecificationDto newMandatoryDto;
     protected WorkflowSpecificationDataProvider(BaseIdService idService, ObjectMapper objectMapper, WorkflowSpecificationService service) {
         super(idService, objectMapper, service);
     }
-
-    private static WorkflowSpecificationDto newDto;
-    private static WorkflowSpecificationDto newMandatoryDto;
 
     /**
      * Creates a new DTO object with default values.

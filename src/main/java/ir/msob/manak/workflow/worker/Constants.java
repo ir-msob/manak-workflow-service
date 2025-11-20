@@ -9,6 +9,7 @@ public class Constants {
     public static final String STAGE_TYPE_KEY = "stageType";
     public static final String CYCLE_ID_KEY = "cycleId";
     public static final String STAGE_HISTORY_ID_KEY = "stageHistoryId";
+    public static final String STAGE_OUTPUT_KEY = "stageOutput";
     public static final String CORRELATION_ID_KEY = "correlationId";
     public static final String WORKER_EXECUTION_STATUS_KEY = "workerExecutionStatus";
     public static final String WORKER_EXECUTION_ERROR_KEY = "workerExecutionError";

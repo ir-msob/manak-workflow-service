@@ -8,7 +8,6 @@ import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchOperation;
 import com.github.fge.jsonpatch.ReplaceOperation;
 import ir.msob.jima.core.commons.id.BaseIdService;
-import org.assertj.core.api.Assertions;
 import ir.msob.manak.core.test.jima.crud.base.domain.DomainCrudDataProvider;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowCriteria;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-import static ir.msob.jima.core.test.CoreTestData.DEFAULT_STRING;
 import static ir.msob.jima.core.test.CoreTestData.UPDATED_STRING;
 
 /**
@@ -29,12 +27,11 @@ import static ir.msob.jima.core.test.CoreTestData.UPDATED_STRING;
 @Component
 public class WorkflowDataProvider extends DomainCrudDataProvider<Workflow, WorkflowDto, WorkflowCriteria, WorkflowRepository, WorkflowService> {
 
+    private static WorkflowDto newDto;
+    private static WorkflowDto newMandatoryDto;
     protected WorkflowDataProvider(BaseIdService idService, ObjectMapper objectMapper, WorkflowService service) {
         super(idService, objectMapper, service);
     }
-
-    private static WorkflowDto newDto;
-    private static WorkflowDto newMandatoryDto;
 
     /**
      * Creates a new DTO object with default values.
@@ -59,6 +56,7 @@ public class WorkflowDataProvider extends DomainCrudDataProvider<Workflow, Workf
     }
 
     /**
+     *
      */
     @Override
     @SneakyThrows
@@ -69,6 +67,7 @@ public class WorkflowDataProvider extends DomainCrudDataProvider<Workflow, Workf
     }
 
     /**
+     *
      */
     @Override
     @SneakyThrows

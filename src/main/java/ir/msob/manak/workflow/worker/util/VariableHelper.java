@@ -51,6 +51,7 @@ public class VariableHelper {
             return defaultValue;
         }
     }
+
     public static Map<String, Object> prepareErrorResult(String errorMessage) {
         return Map.of(
                 WORKER_EXECUTION_STATUS_KEY, Workflow.WorkerExecutionStatus.ERROR,
