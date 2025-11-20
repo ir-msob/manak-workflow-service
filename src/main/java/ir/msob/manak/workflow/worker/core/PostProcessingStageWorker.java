@@ -17,21 +17,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.Map;
 
 import static ir.msob.manak.workflow.worker.Constants.*;
 
 @Component
 @RequiredArgsConstructor
-public class UpdateContextWorker {
+public class PostProcessingStageWorker {
 
-    private static final Logger logger = LoggerFactory.getLogger(UpdateContextWorker.class);
+    private static final Logger logger = LoggerFactory.getLogger(PostProcessingStageWorker.class);
 
     private final WorkflowService workflowService;
     private final UserService userService;
     private final CamundaService camundaService;
 
-    @JobWorker(type = "update-context", autoComplete = false)
+    @JobWorker(type = "post-processing-stage", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableHelper.safeString(vars.get(WORKFLOW_ID_KEY));
@@ -44,7 +45,7 @@ public class UpdateContextWorker {
 
         return workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
-                .flatMap(workflow -> updateStageOutput(workflow, stageHistoryId, cycleId, stageOutput))
+                .flatMap(workflow -> updateStageHistory(workflow, stageHistoryId, cycleId, stageOutput))
                 .flatMap(workflow -> updateContext(workflow, stageHistoryId, cycleId, stageOutput))
                 .flatMap(workflow -> workflowService.update(workflow, userService.getSystemUser()))
                 .flatMap(this::prepareResult)
@@ -54,13 +55,11 @@ public class UpdateContextWorker {
                 .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
     }
 
-    private Mono<WorkflowDto> updateStageOutput(WorkflowDto workflow, String stageHistoryId, String cycleId, Map<String, Object> outputData) {
-        WorkflowUtil.findCycle(workflow, cycleId)
-                .getStagesHistory()
-                .stream()
-                .filter(stageHistory -> stageHistory.getId().equalsIgnoreCase(stageHistoryId))
-                .findFirst()
-                .ifPresent(stageHistory -> stageHistory.setStageOutput(outputData));
+    private Mono<WorkflowDto> updateStageHistory(WorkflowDto workflow, String stageHistoryId, String cycleId, Map<String, Object> outputData) {
+        Workflow.StageHistory stageHistory = WorkflowUtil.findStageHistory(workflow, cycleId, stageHistoryId);
+        stageHistory.setStageOutput(outputData);
+        stageHistory.setExecutionStatus(Workflow.StageExecutionStatus.SUCCESS);
+        stageHistory.setEndedAt(Instant.now());
         return Mono.just(workflow);
     }
 

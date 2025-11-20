@@ -66,7 +66,7 @@ public class CreateCycleWorker {
     private Workflow.Cycle prepareCycle() {
         return Workflow.Cycle.builder()
                 .id(idService.newId())
-                .executionStatus(Workflow.CycleExecutionStatus.INITIALIZED)
+                .executionStatus(Workflow.CycleExecutionStatus.IN_PROGRESS)
                 .createdAt(Instant.now())
                 .build();
     }
