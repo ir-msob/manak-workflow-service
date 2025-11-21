@@ -1,5 +1,7 @@
 package ir.msob.manak.workflow.worker.core;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.client.annotation.JobWorker;
 import io.camunda.client.api.response.ActivatedJob;
 import ir.msob.jima.core.commons.exception.datanotfound.DataNotFoundException;
@@ -9,17 +11,19 @@ import ir.msob.manak.core.service.jima.security.UserService;
 import ir.msob.manak.core.service.jima.service.IdService;
 import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
+import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecification;
 import ir.msob.manak.workflow.camunda.CamundaService;
 import ir.msob.manak.workflow.worker.util.VariableHelper;
 import ir.msob.manak.workflow.worker.util.WorkflowUtil;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Type;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 
 import static ir.msob.manak.workflow.worker.Constants.*;
@@ -33,6 +37,7 @@ public class StagePreProcessingWorker {
     private final UserService userService;
     private final CamundaService camundaService;
     private final IdService idService;
+    private ObjectMapper objectMapper;
 
     /**
      * Executes the pre-processing stage of a workflow.
@@ -55,7 +60,7 @@ public class StagePreProcessingWorker {
         return workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
                 .flatMap(workflow -> determineInputData(workflow, cycleId, stageKey, vars)
-                        .flatMap(inputData -> createStageHistory(stageKey, inputData)
+                        .flatMap(inputData -> createStageHistory(workflow, stageKey, inputData)
                                 .flatMap(stageHistory -> {
                                     // Add stage history to the corresponding cycle
                                     WorkflowUtil.findCycle(workflow, cycleId)
@@ -77,10 +82,11 @@ public class StagePreProcessingWorker {
     /**
      * Creates a new StageHistory object for the stage.
      */
-    private Mono<Workflow.StageHistory> createStageHistory(String stageKey, Map<String, Object> inputData) {
+    private Mono<Workflow.StageHistory> createStageHistory(WorkflowDto workflow, String stageKey, Map<String, Object> inputData) {
+        WorkflowSpecification.StageSpec stageSpec = WorkflowUtil.findStageSpecByKey(workflow, stageKey);
         return Mono.just(Workflow.StageHistory.builder()
                 .id(idService.newId())
-                .stageKey(stageKey)
+                .stage(stageSpec.getStage())
                 .executionStatus(Workflow.StageExecutionStatus.INITIALIZED)
                 .stageInput(inputData)
                 .startedAt(Instant.now())
@@ -95,9 +101,10 @@ public class StagePreProcessingWorker {
             Map<String, Object> workflowContext = workflow.getContext();
             Workflow.Cycle cycle = WorkflowUtil.findCycle(workflow, cycleId);
             Map<String, Object> cycleContext = cycle.getContext();
+            Map<String, Object> specificationContext = workflow.getSpecification().getContext();
             WorkflowSpecification.StageSpec stageSpec = WorkflowUtil.findStageSpecByKey(workflow, stageKey);
 
-            Map<String, Object> inputData = new HashMap<>();
+            Map<String, Object> inputData = clone(specificationContext);
             if (stageSpec.getInputMapping() != null) {
                 stageSpec.getInputMapping().forEach((inputKey, mappingValue) -> {
                     Object value = resolveMapping(mappingValue, workflowContext, cycleContext, processVariable);
@@ -108,6 +115,16 @@ public class StagePreProcessingWorker {
             }
             logger.debug("Determined input data for stage '{}': {}", stageKey, inputData.keySet());
             return inputData;
+        });
+    }
+
+    @SneakyThrows
+    private Map<String, Object> clone(Map<String, Object> specificationContext) {
+        return objectMapper.readValue(objectMapper.writeValueAsString(specificationContext), new TypeReference<Map<String, Object>>() {
+            @Override
+            public Type getType() {
+                return super.getType();
+            }
         });
     }
 

@@ -10,7 +10,7 @@ public class WorkflowUtil {
 
     public static WorkflowSpecification.StageSpec findStageSpecByKey(Workflow workflowDto, String stageKey) {
         return workflowDto.getSpecification().getStages().stream()
-                .filter(ss -> ss.getKey().equalsIgnoreCase(stageKey))
+                .filter(ss -> ss.getStage().getKey().equalsIgnoreCase(stageKey))
                 .findFirst()
                 .orElseThrow(() -> new DataNotFoundException("Stage not found: " + stageKey));
     }

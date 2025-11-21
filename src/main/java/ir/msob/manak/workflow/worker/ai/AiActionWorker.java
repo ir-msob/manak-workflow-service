@@ -1,4 +1,4 @@
-package ir.msob.manak.workflow.worker.aiexecution;
+package ir.msob.manak.workflow.worker.ai;
 
 import io.camunda.client.annotation.JobWorker;
 import io.camunda.client.api.response.ActivatedJob;
@@ -12,12 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 @Component
-public class AiExecutionWorker extends ActionWorker {
-    private static final Logger logger = LoggerFactory.getLogger(AiExecutionWorker.class);
+public class AiActionWorker extends ActionWorker {
+    private static final Logger logger = LoggerFactory.getLogger(AiActionWorker.class);
     @Getter
-    private final AiExecutionActionRegistry actionRegistry;
+    private final AiActionRegistry actionRegistry;
 
-    public AiExecutionWorker(CamundaService camundaService, AiExecutionActionRegistry actionRegistry) {
+    public AiActionWorker(CamundaService camundaService, AiActionRegistry actionRegistry) {
         super(camundaService);
         this.actionRegistry = actionRegistry;
     }

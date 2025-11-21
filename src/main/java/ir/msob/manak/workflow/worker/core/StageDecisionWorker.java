@@ -60,8 +60,8 @@ public class StageDecisionWorker {
 
     private Mono<Map<String, Object>> prepareResult(WorkflowSpecification.StageSpec stageSpec) {
         return Mono.just(Map.of(
-                STAGE_TYPE_KEY, stageSpec.getType(),
-                STAGE_KEY_KEY, stageSpec.getKey()
+                STAGE_TYPE_KEY, stageSpec.getStage().getType(),
+                STAGE_KEY_KEY, stageSpec.getStage().getKey()
         ));
     }
 

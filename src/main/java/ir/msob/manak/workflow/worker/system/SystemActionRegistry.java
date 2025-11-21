@@ -1,8 +1,7 @@
-package ir.msob.manak.workflow.worker.aiexecution;
+package ir.msob.manak.workflow.worker.system;
 
 import ir.msob.manak.workflow.worker.action.ActionHandler;
 import ir.msob.manak.workflow.worker.action.ActionRegistry;
-import ir.msob.manak.workflow.worker.aiexecution.action.AIContentOptimizationAction;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -10,12 +9,9 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class AiExecutionActionRegistry implements ActionRegistry {
+public class SystemActionRegistry implements ActionRegistry {
 
-    private final AIContentOptimizationAction aiContentOptimizationWorker;
-    private final Map<String, ActionHandler> actions = Map.of(
-            "AI-Content-Optimization", aiContentOptimizationWorker
-    );
+    private final Map<String, SystemActionHandler> actions;
 
 
     @Override

@@ -1,4 +1,4 @@
-package ir.msob.manak.workflow.worker.systemaction;
+package ir.msob.manak.workflow.worker.system;
 
 import io.camunda.client.annotation.JobWorker;
 import io.camunda.client.api.response.ActivatedJob;
@@ -16,9 +16,9 @@ public class SystemActionWorker extends ActionWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(SystemActionWorker.class);
     @Getter
-    private final SystemActionActionRegistry actionRegistry;
+    private final SystemActionRegistry actionRegistry;
 
-    public SystemActionWorker(CamundaService camundaService, SystemActionActionRegistry actionRegistry) {
+    public SystemActionWorker(CamundaService camundaService, SystemActionRegistry actionRegistry) {
         super(camundaService);
         this.actionRegistry = actionRegistry;
     }

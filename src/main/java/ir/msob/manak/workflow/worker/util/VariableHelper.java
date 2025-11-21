@@ -4,6 +4,7 @@ import ir.msob.jima.core.commons.exception.runtime.CommonRuntimeException;
 import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -49,6 +50,18 @@ public class VariableHelper {
             return Integer.parseInt(o.toString());
         } catch (Exception e) {
             return defaultValue;
+        }
+    }
+
+    public static <T> List<T> safeList(Object o, Class<T> clazz) {
+        if (o == null) return Collections.emptyList();
+        try {
+            if (o instanceof List<?> list) {
+                return (List<T>) list;
+            }
+            throw new CommonRuntimeException("Cannot convert List");
+        } catch (ClassCastException ex) {
+            return Collections.emptyList();
         }
     }
 

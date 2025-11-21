@@ -21,6 +21,16 @@ public class Constants {
     public static final String CYCLE_CONTEXT_KEY = "cycleContext";
     public static final String PROCESS_VARIABLE_KEY = "processVariable";
     public static final String VARIABLE_START_CHAR = "$";
+    public static final String REPOSITORY_BRANCHES_KEY = "repositoryBranches";
+    public static final String REPOSITORY_PULL_REQUESTS_KEY = "repositoryPullRequests";
+    public static final String REPOSITORY_DIFF_PATCHES_KEY = "repositoryDiffPatches";
+    public static final String RESOURCE_CONTENTS_KEY = "resourceContents";
+    public static final String RESOURCE_OVERVIEWS_KEY = "resourceOverviews";
+    public static final String CONTENT_KEY = "content";
+    public static final String OPTIMIZED_CONTENT_KEY = "optimizedContent";
+    public static final String AI_MODEL_KEY = "aiModel";
+    public static final String AI_PROMPT_TEMPLATE_KEY = "aiPromptTemplate";
+    public static final String AI_RESPONSE_SCHEMA_KEY = "aiResponseSchema";
 
     public Constants() {
     }

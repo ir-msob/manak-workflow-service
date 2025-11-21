@@ -1,4 +1,4 @@
-package ir.msob.manak.workflow.worker.systemaction;
+package ir.msob.manak.workflow.worker.ai;
 
 import ir.msob.manak.workflow.worker.action.ActionHandler;
 import ir.msob.manak.workflow.worker.action.ActionRegistry;
@@ -9,10 +9,9 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class SystemActionActionRegistry implements ActionRegistry {
+public class AiActionRegistry implements ActionRegistry {
 
-    private final Map<String, ActionHandler> actions = Map.of();
-
+    private final Map<String, AiActionHandler> actions;
 
     @Override
     public ActionHandler getActionHandler(String action) {
