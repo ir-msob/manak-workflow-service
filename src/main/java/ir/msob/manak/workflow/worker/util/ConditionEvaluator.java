@@ -91,32 +91,26 @@ public class ConditionEvaluator {
                                        Map<String, Object> processVars,
                                        Map<String, Object> stageOutput) {
         // null handling
-        switch (expected) {
-            case null -> {
-                return actual == null;
-            }
+        if (expected == null) {
+            return actual == null;
+        }
 
-
-            // If expected is a Map -> operator-based
-            case Map<?, ?> map -> {
-                Map<String, Object> opMap = (Map<String, Object>) map;
-                for (Map.Entry<String, Object> op : opMap.entrySet()) {
-                    String operator = op.getKey();
-                    Object operand = op.getValue();
-                    boolean res = evaluateOperator(actual, operator, operand, workflowContext, cycleContext, processVars, stageOutput);
-                    if (!res) return false;
-                }
-                return true;
+        // If expected is a Map -> operator-based
+        if (expected instanceof Map<?,?> map) {
+            Map<String, Object> opMap = (Map<String, Object>) map;
+            for (Map.Entry<String, Object> op : opMap.entrySet()) {
+                String operator = op.getKey();
+                Object operand = op.getValue();
+                boolean res = evaluateOperator(actual, operator, operand, workflowContext, cycleContext, processVars, stageOutput);
+                if (!res) return false;
             }
+            return true;
+        }
 
-
-            // If expected is a String reference like "$workflowContext.x" -> resolve it
-            case String s when s.startsWith(VARIABLE_START_CHAR) -> {
-                Object resolved = resolveValueFromConditionKey(s, workflowContext, cycleContext, processVars, stageOutput);
-                return evaluateComparison(actual, resolved, workflowContext, cycleContext, processVars, stageOutput);
-            }
-            default -> {
-            }
+        // If expected is a String reference like "$workflowContext.x" -> resolve it
+        if (expected instanceof String expectedString && expectedString.startsWith(VARIABLE_START_CHAR)) {
+            Object resolved = resolveValueFromConditionKey(expectedString, workflowContext, cycleContext, processVars, stageOutput);
+            return evaluateComparison(actual, resolved, workflowContext, cycleContext, processVars, stageOutput);
         }
 
         // primitive comparison
@@ -148,16 +142,16 @@ public class ConditionEvaluator {
             case "$eq" -> {
                 if (actual == null && operand == null) return true;
                 if (actual == null || operand == null) return false;
-                if (actual instanceof Number && operand instanceof Number) {
-                    return compareNumbers((Number) actual, (Number) operand) == 0;
+                if (actual instanceof Number actualNumber && operand instanceof Number operandNumber) {
+                    return compareNumbers(actualNumber, operandNumber) == 0;
                 }
                 return actual.toString().equalsIgnoreCase(operand.toString());
             }
             case "$ne", "$not" -> {
                 if (operand == null) return actual != null;
                 if (actual == null) return true;
-                if (actual instanceof Number && operand instanceof Number) {
-                    return compareNumbers((Number) actual, (Number) operand) != 0;
+                if (actual instanceof Number actualNumber && operand instanceof Number operandNumber) {
+                    return compareNumbers(actualNumber, operandNumber) != 0;
                 }
                 return !actual.toString().equalsIgnoreCase(operand.toString());
             }
