@@ -5,7 +5,7 @@ import io.camunda.client.api.response.ActivatedJob;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.workflow.camunda.CamundaService;
-import ir.msob.manak.workflow.worker.action.ActionWorker;
+import ir.msob.manak.workflow.worker.common.ActionWorker;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

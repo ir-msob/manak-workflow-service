@@ -1,7 +1,7 @@
 package ir.msob.manak.workflow.worker.system;
 
-import ir.msob.manak.workflow.worker.action.ActionHandler;
-import ir.msob.manak.workflow.worker.action.ActionRegistry;
+import ir.msob.manak.workflow.worker.common.ActionHandler;
+import ir.msob.manak.workflow.worker.common.ActionRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
