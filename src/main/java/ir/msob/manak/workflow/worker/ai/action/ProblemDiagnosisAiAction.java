@@ -10,7 +10,7 @@ import java.util.Map;
 import static ir.msob.manak.workflow.worker.Constants.CONTENT_KEY;
 
 @Component
-public class AiPatchGenerationAiAction implements AiActionHandler {
+public class ProblemDiagnosisAiAction implements AiActionHandler {
 
 
     @Override
