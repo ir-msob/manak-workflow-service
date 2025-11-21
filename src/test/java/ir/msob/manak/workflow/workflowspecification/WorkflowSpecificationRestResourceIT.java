@@ -23,19 +23,19 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest(classes = {Application.class, ContainerConfiguration.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @CommonsLog
-public class WorkflowSpecificationRestResourceIT
+class WorkflowSpecificationRestResourceIT
         extends DomainCrudRestResourceTest<WorkflowSpecification, WorkflowSpecificationDto, WorkflowSpecificationCriteria, WorkflowSpecificationRepository, WorkflowSpecificationService, WorkflowSpecificationDataProvider>
         implements WorkflowSpecificationTypeReference {
 
     @SneakyThrows
     @BeforeAll
-    public static void beforeAll() {
+    static void beforeAll() {
         CoreTestData.init(new ObjectId(), new ObjectId());
     }
 
     @SneakyThrows
     @BeforeEach
-    public void beforeEach() {
+    void beforeEach() {
         getDataProvider().cleanups();
         WorkflowSpecificationDataProvider.createMandatoryNewDto();
         WorkflowSpecificationDataProvider.createNewDto();

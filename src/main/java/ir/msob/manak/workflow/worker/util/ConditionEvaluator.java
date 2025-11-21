@@ -5,10 +5,7 @@ import ir.msob.jima.core.commons.logger.LoggerFactory;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static ir.msob.manak.workflow.worker.Constants.*;
@@ -94,33 +91,39 @@ public class ConditionEvaluator {
                                        Map<String, Object> processVars,
                                        Map<String, Object> stageOutput) {
         // null handling
-        if (expected == null) {
-            return actual == null;
-        }
-
-        // If expected is a Map -> operator-based
-        if (expected instanceof Map) {
-            Map<String, Object> opMap = (Map<String, Object>) expected;
-            for (Map.Entry<String, Object> op : opMap.entrySet()) {
-                String operator = op.getKey();
-                Object operand = op.getValue();
-                boolean res = evaluateOperator(actual, operator, operand, workflowContext, cycleContext, processVars, stageOutput);
-                if (!res) return false;
+        switch (expected) {
+            case null -> {
+                return actual == null;
             }
-            return true;
-        }
 
-        // If expected is a String reference like "$workflowContext.x" -> resolve it
-        if (expected instanceof String && ((String) expected).startsWith(VARIABLE_START_CHAR)) {
-            Object resolved = resolveValueFromConditionKey((String) expected, workflowContext, cycleContext, processVars, stageOutput);
-            return evaluateComparison(actual, resolved, workflowContext, cycleContext, processVars, stageOutput);
+
+            // If expected is a Map -> operator-based
+            case Map<?, ?> map -> {
+                Map<String, Object> opMap = (Map<String, Object>) map;
+                for (Map.Entry<String, Object> op : opMap.entrySet()) {
+                    String operator = op.getKey();
+                    Object operand = op.getValue();
+                    boolean res = evaluateOperator(actual, operator, operand, workflowContext, cycleContext, processVars, stageOutput);
+                    if (!res) return false;
+                }
+                return true;
+            }
+
+
+            // If expected is a String reference like "$workflowContext.x" -> resolve it
+            case String s when s.startsWith(VARIABLE_START_CHAR) -> {
+                Object resolved = resolveValueFromConditionKey(s, workflowContext, cycleContext, processVars, stageOutput);
+                return evaluateComparison(actual, resolved, workflowContext, cycleContext, processVars, stageOutput);
+            }
+            default -> {
+            }
         }
 
         // primitive comparison
         if (actual == null) return false;
 
-        if (actual instanceof Number && expected instanceof Number) {
-            return compareNumbers((Number) actual, (Number) expected) == 0;
+        if (actual instanceof Number actualNumber && expected instanceof Number expectedNumber) {
+            return compareNumbers(actualNumber, expectedNumber) == 0;
         }
 
         // string-ish compare (case-insensitive)
@@ -137,58 +140,66 @@ public class ConditionEvaluator {
                                      Map<String, Object> processVars,
                                      Map<String, Object> stageOutput) {
         // If operand is a reference string like "$workflowContext.x", resolve it first
-        if (operand instanceof String && ((String) operand).startsWith(VARIABLE_START_CHAR)) {
-            operand = resolveValueFromConditionKey((String) operand, workflowContext, cycleContext, processVars, stageOutput);
+        if (operand instanceof String operandString && (operandString).startsWith(VARIABLE_START_CHAR)) {
+            operand = resolveValueFromConditionKey(operandString, workflowContext, cycleContext, processVars, stageOutput);
         }
 
-        if ("$eq".equals(operator)) {
-            if (actual == null && operand == null) return true;
-            if (actual == null || operand == null) return false;
-            if (actual instanceof Number && operand instanceof Number) {
-                return compareNumbers((Number) actual, (Number) operand) == 0;
+        switch (operator) {
+            case "$eq" -> {
+                if (actual == null && operand == null) return true;
+                if (actual == null || operand == null) return false;
+                if (actual instanceof Number && operand instanceof Number) {
+                    return compareNumbers((Number) actual, (Number) operand) == 0;
+                }
+                return actual.toString().equalsIgnoreCase(operand.toString());
             }
-            return actual.toString().equalsIgnoreCase(operand.toString());
-        } else if ("$ne".equals(operator) || "$not".equals(operator)) {
-            if (operand == null) return actual != null;
-            if (actual == null) return true;
-            if (actual instanceof Number && operand instanceof Number) {
-                return compareNumbers((Number) actual, (Number) operand) != 0;
+            case "$ne", "$not" -> {
+                if (operand == null) return actual != null;
+                if (actual == null) return true;
+                if (actual instanceof Number && operand instanceof Number) {
+                    return compareNumbers((Number) actual, (Number) operand) != 0;
+                }
+                return !actual.toString().equalsIgnoreCase(operand.toString());
             }
-            return !actual.toString().equalsIgnoreCase(operand.toString());
-        } else if ("$in".equals(operator)) {
-            if (actual == null) return false;
-            Collection<?> col = toCollection(operand);
-            if (col == null) return false;
-            for (Object item : col) {
-                if (item != null && actual.toString().equalsIgnoreCase(item.toString())) return true;
+            case "$in" -> {
+                if (actual == null) return false;
+                Collection<?> col = toCollection(operand);
+                if (col == null) return false;
+                for (Object item : col) {
+                    if (item != null && actual.toString().equalsIgnoreCase(item.toString())) return true;
+                }
+                return false;
             }
-            return false;
-        } else if ("$exists".equals(operator)) {
-            boolean want = Boolean.TRUE.equals(operand) || "true".equalsIgnoreCase(String.valueOf(operand));
-            return want == (actual != null);
-        } else if ("$regex".equals(operator)) {
-            if (actual == null) return false;
-            String pattern = String.valueOf(operand);
-            return Pattern.compile(pattern).matcher(actual.toString()).find();
-        } else if ("$gt".equals(operator) || "$gte".equals(operator) || "$lt".equals(operator) || "$lte".equals(operator)) {
-            Double right = toDouble(operand);
-            Double left = toDouble(actual);
-            if (left == null || right == null) return false;
-            return switch (operator) {
-                case "$gt" -> left > right;
-                case "$gte" -> left >= right;
-                case "$lt" -> left < right;
-                case "$lte" -> left <= right;
-                default -> false;
-            };
-        } else {
-            logger.debug("Unknown operator in condition: {}", operator);
-            return false;
+            case "$exists" -> {
+                boolean want = Boolean.TRUE.equals(operand) || "true".equalsIgnoreCase(String.valueOf(operand));
+                return want == (actual != null);
+            }
+            case "$regex" -> {
+                if (actual == null) return false;
+                String pattern = String.valueOf(operand);
+                return Pattern.compile(pattern).matcher(actual.toString()).find();
+            }
+            case "$gt", "$gte", "$lt", "$lte" -> {
+                Double right = toDouble(operand);
+                Double left = toDouble(actual);
+                if (left == null || right == null) return false;
+                return switch (operator) {
+                    case "$gt" -> left > right;
+                    case "$gte" -> left >= right;
+                    case "$lt" -> left < right;
+                    case "$lte" -> left <= right;
+                    default -> false;
+                };
+            }
+            case null, default -> {
+                logger.debug("Unknown operator in condition: {}", operator);
+                return false;
+            }
         }
     }
 
     private Collection<?> toCollection(Object o) {
-        if (o == null) return null;
+        if (o == null) return Collections.emptyList();
         if (o instanceof Collection) return (Collection<?>) o;
         if (o.getClass().isArray()) return Arrays.asList((Object[]) o);
         if (o instanceof String s) {
@@ -200,7 +211,7 @@ public class ConditionEvaluator {
 
     private Double toDouble(Object o) {
         if (o == null) return null;
-        if (o instanceof Number) return ((Number) o).doubleValue();
+        if (o instanceof Number number) return (number).doubleValue();
         try {
             return Double.parseDouble(o.toString());
         } catch (Exception ex) {

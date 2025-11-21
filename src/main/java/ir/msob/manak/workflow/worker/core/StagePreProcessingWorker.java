@@ -38,7 +38,7 @@ public class StagePreProcessingWorker {
     private final UserService userService;
     private final CamundaService camundaService;
     private final IdService idService;
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     /**
      * Executes the pre-processing stage of a workflow.

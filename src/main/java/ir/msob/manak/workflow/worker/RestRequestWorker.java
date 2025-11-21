@@ -90,7 +90,7 @@ public class RestRequestWorker {
 
     private static int safeInt(Object o, int defaultValue) {
         if (o == null) return defaultValue;
-        if (o instanceof Number) return ((Number) o).intValue();
+        if (o instanceof Number number) return number.intValue();
         try {
             return Integer.parseInt(o.toString());
         } catch (Exception e) {
@@ -105,7 +105,7 @@ public class RestRequestWorker {
         try {
             Object value = ActivatedJob.class.getMethod("getRetries").invoke(job);
             if (value == null) return defaultValue;
-            if (value instanceof Number) return ((Number) value).intValue();
+            if (value instanceof Number number) return number.intValue();
             return Integer.parseInt(value.toString());
         } catch (Exception ex) {
             log.debug("Couldn't read retries from job, using default {}. reason={}", defaultValue, ex.getMessage());
@@ -288,8 +288,8 @@ public class RestRequestWorker {
         try {
             String lower = contentType == null ? "" : contentType.toLowerCase();
             if (lower.contains("json")) {
-                if (payload instanceof String) {
-                    String s = ((String) payload).trim();
+                if (payload instanceof String payloadString) {
+                    String s = payloadString.trim();
                     if (s.startsWith("{") || s.startsWith("[")) {
                         return objectMapper.readTree(s);
                     } else {
@@ -298,13 +298,12 @@ public class RestRequestWorker {
                 }
                 return payload;
             } else if (lower.contains("octet-stream") || lower.contains("application/octet-stream")) {
-                if (payload instanceof String) {
-                    try {
-                        return Base64.getDecoder().decode((String) payload);
-                    } catch (IllegalArgumentException ex) {
-                        return ((String) payload).getBytes();
-                    }
-                } else if (payload instanceof byte[]) {
+                if (payload instanceof String payloadString) try {
+                    return Base64.getDecoder().decode(payloadString);
+                } catch (IllegalArgumentException ex) {
+                    return payloadString.getBytes();
+                }
+                else if (payload instanceof byte[]) {
                     return payload;
                 } else {
                     return payload.toString().getBytes();

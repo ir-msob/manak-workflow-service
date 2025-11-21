@@ -18,7 +18,7 @@ public class ChatClient {
         DomainInfo domainInfo = DomainInfo.info.getAnnotation(chatRequestDto.getClass());
         DtoInfo dtoInfo = DtoInfo.info.getAnnotation(chatRequestDto.getClass());
         return webClient.post()
-                .uri((builder) -> builder.host(dtoInfo.serviceName())
+                .uri(builder -> builder.host(dtoInfo.serviceName())
                         .path(RestUtil.uri(dtoInfo, domainInfo)).build())
                 .bodyValue(chatRequestDto)
                 .retrieve()

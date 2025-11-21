@@ -12,6 +12,9 @@ import static ir.msob.manak.workflow.worker.Constants.WORKER_EXECUTION_ERROR_KEY
 import static ir.msob.manak.workflow.worker.Constants.WORKER_EXECUTION_STATUS_KEY;
 
 public class VariableHelper {
+    private VariableHelper() {
+    }
+
     public static String safeString(Object o) {
         if (o == null) return null;
         return Objects.toString(o, null);
@@ -45,7 +48,7 @@ public class VariableHelper {
 
     public static int safeInt(Object o, int defaultValue) {
         if (o == null) return defaultValue;
-        if (o instanceof Number) return ((Number) o).intValue();
+        if (o instanceof Number number) return number.intValue();
         try {
             return Integer.parseInt(o.toString());
         } catch (Exception e) {

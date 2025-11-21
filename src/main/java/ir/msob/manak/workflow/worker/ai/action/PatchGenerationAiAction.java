@@ -18,7 +18,7 @@ import static ir.msob.manak.workflow.worker.Constants.*;
 
 @Component
 public class PatchGenerationAiAction extends AiActionHandler {
-    private static final Logger logger = LoggerFactory.getLogger(ContentOptimizationAiAction.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchGenerationAiAction.class);
 
     private final ObjectMapper objectMapper;
     private final WorkflowService workflowService;
