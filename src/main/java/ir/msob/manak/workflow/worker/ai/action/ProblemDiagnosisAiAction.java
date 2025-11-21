@@ -1,26 +1,42 @@
 package ir.msob.manak.workflow.worker.ai.action;
 
+import ir.msob.jima.core.commons.logger.Logger;
+import ir.msob.jima.core.commons.logger.LoggerFactory;
+import ir.msob.manak.workflow.client.ChatClient;
 import ir.msob.manak.workflow.worker.ai.AiActionHandler;
 import ir.msob.manak.workflow.worker.util.VariableHelper;
+import ir.msob.manak.workflow.workflow.WorkflowService;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
-import static ir.msob.manak.workflow.worker.Constants.CONTENT_KEY;
+import static ir.msob.manak.workflow.worker.Constants.*;
 
 @Component
-public class ProblemDiagnosisAiAction implements AiActionHandler {
+public class ProblemDiagnosisAiAction extends AiActionHandler {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProblemDiagnosisAiAction.class);
+    private final WorkflowService workflowService;
 
-    @Override
-    public Mono<Map<String, Object>> execute(Map<String, Object> params) {
-        String content = VariableHelper.safeString(params.get(CONTENT_KEY));
-
-        return null;
+    public ProblemDiagnosisAiAction(ChatClient chatClient, WorkflowService workflowService) {
+        super(chatClient);
+        this.workflowService = workflowService;
     }
 
-    private Mono<Map<String, Object>> prepareResult(String optimizedContents) {
-        return Mono.just(Map.of());
+    @Override
+    protected Mono<Map<String, Object>> prepareResult(String aiResponse, Map<String, Object> params) {
+
+        String workflowId = VariableHelper.safeString(params.get(WORKFLOW_ID_KEY));
+        String cycleId = VariableHelper.safeString(params.get(CYCLE_ID_KEY));
+
+        logger.info("Starting ProblemDiagnosisAiAction. workflowId={}, cycleId={}", workflowId, cycleId);
+
+        Map<String, Object> resultMap = Map.of(SOLUTION_KEY, aiResponse);
+
+        return workflowService.updateCycleContext(workflowId, cycleId, resultMap)
+                .doOnSuccess(v -> logger.info("Cycle context updated successfully. workflowId={}, cycleId={}", workflowId, cycleId))
+                .doOnError(ex -> logger.error("Failed to update cycle context. workflowId={}, cycleId={}", workflowId, cycleId, ex))
+                .then(Mono.just(resultMap));
     }
 }

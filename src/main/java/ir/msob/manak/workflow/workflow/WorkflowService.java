@@ -15,6 +15,7 @@ import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowCriteria;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
+import ir.msob.manak.workflow.worker.util.WorkflowUtil;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,8 @@ import reactor.core.publisher.Mono;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class WorkflowService extends DomainCrudService<Workflow, WorkflowDto, WorkflowCriteria, WorkflowRepository>
@@ -102,4 +105,40 @@ public class WorkflowService extends DomainCrudService<Workflow, WorkflowDto, Wo
                 .timestamp(Instant.now())
                 .build();
     }
+
+    @Transactional
+    public Mono<WorkflowDto> updateCycleContext(String workflowId,
+                                                String cycleId,
+                                                Map<String, Object> params) {
+
+        return getOne(workflowId, userService.getSystemUser())
+                .switchIfEmpty(Mono.error(new IllegalStateException(
+                        "Workflow not found. Id=" + workflowId)))
+                .flatMap(workflowDto -> {
+
+                    Workflow.Cycle cycle = WorkflowUtil.findCycle(workflowDto, cycleId);
+                    if (cycle == null) {
+                        return Mono.error(new IllegalStateException(
+                                "Cycle not found. workflowId=" + workflowId + ", cycleId=" + cycleId));
+                    }
+
+                    // Ensure context is initialized
+                    Map<String, Object> context = cycle.getContext();
+                    if (context == null) {
+                        context = new HashMap<>();
+                        cycle.setContext(context);
+                    }
+
+                    if (params != null && !params.isEmpty()) {
+                        context.putAll(params);
+                    }
+
+                    return update(workflowDto, userService.getSystemUser());
+                })
+                .doOnError(e ->
+                        logger.warn("Failed to update cycle context: workflowId={}, cycleId={}, error={}",
+                                workflowId, cycleId, e.getMessage())
+                );
+    }
+
 }

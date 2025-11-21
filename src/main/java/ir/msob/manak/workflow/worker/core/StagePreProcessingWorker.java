@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Type;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 
 import static ir.msob.manak.workflow.worker.Constants.*;
@@ -101,10 +102,14 @@ public class StagePreProcessingWorker {
             Map<String, Object> workflowContext = workflow.getContext();
             Workflow.Cycle cycle = WorkflowUtil.findCycle(workflow, cycleId);
             Map<String, Object> cycleContext = cycle.getContext();
-            Map<String, Object> specificationContext = workflow.getSpecification().getContext();
+            Map<String, Object> specificationContext = clone(workflow.getSpecification().getContext());
             WorkflowSpecification.StageSpec stageSpec = WorkflowUtil.findStageSpecByKey(workflow, stageKey);
+            Map<String, Object> stageContext = clone(stageSpec.getStage().getContext());
 
-            Map<String, Object> inputData = clone(specificationContext);
+            Map<String, Object> inputData = new HashMap<>();
+            inputData.putAll(specificationContext);
+            inputData.putAll(stageContext);
+
             if (stageSpec.getInputMapping() != null) {
                 stageSpec.getInputMapping().forEach((inputKey, mappingValue) -> {
                     Object value = resolveMapping(mappingValue, workflowContext, cycleContext, processVariable);

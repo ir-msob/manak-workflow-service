@@ -1,5 +1,7 @@
 package ir.msob.manak.workflow.worker;
 
+import java.util.regex.Pattern;
+
 public class Constants {
     public static final String ACTION_KEY = "action";
     public static final String PARAMS_KEY = "params";
@@ -26,11 +28,14 @@ public class Constants {
     public static final String REPOSITORY_DIFF_PATCHES_KEY = "repositoryDiffPatches";
     public static final String RESOURCE_CONTENTS_KEY = "resourceContents";
     public static final String RESOURCE_OVERVIEWS_KEY = "resourceOverviews";
+    public static final String SOLUTION_KEY = "solution";
     public static final String CONTENT_KEY = "content";
     public static final String OPTIMIZED_CONTENT_KEY = "optimizedContent";
+    public static final String AI_TOOLS_KEY = "aiTools";
     public static final String AI_MODEL_KEY = "aiModel";
     public static final String AI_PROMPT_TEMPLATE_KEY = "aiPromptTemplate";
     public static final String AI_RESPONSE_SCHEMA_KEY = "aiResponseSchema";
+    public static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
 
     public Constants() {
     }
