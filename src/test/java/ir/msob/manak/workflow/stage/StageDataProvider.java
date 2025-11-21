@@ -31,6 +31,7 @@ public class StageDataProvider extends DomainCrudDataProvider<Stage, StageDto, S
 
     private static StageDto newDto;
     private static StageDto newMandatoryDto;
+
     protected StageDataProvider(BaseIdService idService, ObjectMapper objectMapper, StageService service) {
         super(idService, objectMapper, service);
     }
