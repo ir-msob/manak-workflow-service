@@ -1,11 +1,11 @@
 package ir.msob.manak.workflow.worker.system.action;
 
+import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.domain.model.vectorhub.document.DocumentOverview;
 import ir.msob.manak.domain.model.vectorhub.repository.RepositoryOverview;
 import ir.msob.manak.domain.model.workflow.dto.ResourceOverview;
 import ir.msob.manak.workflow.client.VectorHubClient;
 import ir.msob.manak.workflow.worker.system.SystemActionHandler;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
@@ -25,7 +25,7 @@ public class FetchResourceOverviewSystemAction implements SystemActionHandler {
 
     @Override
     public Mono<Map<String, Object>> execute(Map<String, Object> params) {
-        List<ResourceOverview> resources = VariableHelper.safeList(params.get(RESOURCE_OVERVIEWS_KEY), ResourceOverview.class);
+        List<ResourceOverview> resources = VariableUtils.safeList(params.get(RESOURCE_OVERVIEWS_KEY));
 
         return Flux.fromIterable(resources)
                 .flatMap(this::fetchOverviewIfNeeded)

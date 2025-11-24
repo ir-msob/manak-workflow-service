@@ -3,8 +3,9 @@ package ir.msob.manak.workflow.worker.common;
 import io.camunda.client.api.response.ActivatedJob;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
+import ir.msob.manak.domain.model.util.VariableUtils;
+import ir.msob.manak.domain.model.worker.WorkerUtils;
 import ir.msob.manak.workflow.camunda.CamundaService;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -33,11 +34,11 @@ public abstract class ActionWorker {
                 .map(ActivatedJob::getVariablesAsMap)
                 .flatMap(vars -> {
                     // Log action and params
-                    String action = Optional.ofNullable(VariableHelper.safeString(vars.get(ACTION_KEY)))
+                    String action = Optional.ofNullable(VariableUtils.safeString(vars.get(ACTION_KEY)))
                             .orElseThrow(() -> new IllegalArgumentException("Action key is missing"));
                     logger.info("Action to be executed: {}", action);
 
-                    Map<String, Object> params = Optional.ofNullable(VariableHelper.safeMapStringObject(vars.get(PARAMS_KEY)))
+                    Map<String, Object> params = Optional.ofNullable(VariableUtils.safeMapStringObject(vars.get(PARAMS_KEY)))
                             .orElseThrow(() -> new IllegalArgumentException("Params key is missing"));
                     logger.info("Parameters received: {}", params);
 
@@ -53,7 +54,7 @@ public abstract class ActionWorker {
                             .onErrorResume(ex -> {
                                 logger.error("Error during AI execution for jobKey={}: {}", job.getKey(), ex.getMessage(), ex);
                                 // Return error details to Camunda engine
-                                return camundaService.complete(job, VariableHelper.prepareErrorResult(ex.getMessage()))
+                                return camundaService.complete(job, WorkerUtils.prepareErrorResult(job.getKey(), ex))
                                         .then(Mono.error(ex));
                             });
                 });

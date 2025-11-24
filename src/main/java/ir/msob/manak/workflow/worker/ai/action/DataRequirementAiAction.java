@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
+import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.domain.model.workflow.dto.DataRequirement;
 import ir.msob.manak.domain.model.workflow.dto.ResourceContent;
 import ir.msob.manak.domain.model.workflow.dto.ResourceOverview;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
 import ir.msob.manak.workflow.client.ChatClient;
 import ir.msob.manak.workflow.worker.ai.AiActionHandler;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -42,7 +42,7 @@ public class DataRequirementAiAction extends AiActionHandler {
     @Override
     @SneakyThrows
     protected Mono<Map<String, Object>> prepareResult(String aiResponse, Map<String, Object> params) {
-        String workflowId = VariableHelper.safeString(params.get(WORKFLOW_ID_KEY));
+        String workflowId = VariableUtils.safeString(params.get(WORKFLOW_ID_KEY));
         logger.info("DataRequirement action started. workflowId={}", workflowId);
 
         DataRequirement dataRequirement;
@@ -73,10 +73,10 @@ public class DataRequirementAiAction extends AiActionHandler {
                     }
 
                     List<ResourceContent> existingContents =
-                            VariableHelper.safeList(ctx.get(RESOURCE_CONTENTS_KEY), ResourceContent.class);
+                            VariableUtils.safeList(ctx.get(RESOURCE_CONTENTS_KEY));
 
                     List<ResourceOverview> existingOverviews =
-                            VariableHelper.safeList(ctx.get(RESOURCE_OVERVIEWS_KEY), ResourceOverview.class);
+                            VariableUtils.safeList(ctx.get(RESOURCE_OVERVIEWS_KEY));
 
                     if (existingContents == null) {
                         existingContents = new ArrayList<>();

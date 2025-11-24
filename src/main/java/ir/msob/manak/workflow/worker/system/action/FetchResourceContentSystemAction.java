@@ -1,9 +1,9 @@
 package ir.msob.manak.workflow.worker.system.action;
 
 
+import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.domain.model.workflow.dto.ResourceContent;
 import ir.msob.manak.workflow.worker.system.SystemActionHandler;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ public class FetchResourceContentSystemAction implements SystemActionHandler {
 
     @Override
     public Mono<Map<String, Object>> execute(Map<String, Object> params) {
-        List<ResourceContent> resources = VariableHelper.safeList(params.get(RESOURCE_CONTENTS_KEY), ResourceContent.class);
+        List<ResourceContent> resources = VariableUtils.safeList(params.get(RESOURCE_CONTENTS_KEY));
 
         return Flux.fromIterable(resources)
                 .flatMap(this::fetchContentIfNeeded)

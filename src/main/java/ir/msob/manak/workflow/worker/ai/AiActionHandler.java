@@ -3,9 +3,9 @@ package ir.msob.manak.workflow.worker.ai;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.domain.model.chat.chat.ChatRequestDto;
+import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.workflow.client.ChatClient;
 import ir.msob.manak.workflow.worker.common.ActionHandler;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
@@ -42,7 +42,7 @@ public abstract class AiActionHandler implements ActionHandler {
     public Mono<Map<String, Object>> execute(Map<String, Object> params) {
         Objects.requireNonNull(params, "params must not be null");
 
-        String template = VariableHelper.safeString(params.get(AI_PROMPT_TEMPLATE_KEY));
+        String template = VariableUtils.safeString(params.get(AI_PROMPT_TEMPLATE_KEY));
         if (template == null || template.isBlank()) {
             logger.warn("Missing or empty AI prompt template (key: {})", AI_PROMPT_TEMPLATE_KEY);
             return Mono.error(new IllegalArgumentException("AI prompt template is required"));
@@ -78,9 +78,9 @@ public abstract class AiActionHandler implements ActionHandler {
      */
     private ChatRequestDto buildChatRequest(String prompt, Map<String, Object> params) {
         return ChatRequestDto.builder()
-                .modelSpecificationKey(VariableHelper.safeString(params.get(AI_MODEL_KEY)))
+                .modelSpecificationKey(VariableUtils.safeString(params.get(AI_MODEL_KEY)))
                 .message(prompt)
-                .tools(VariableHelper.safeList(params.get(AI_TOOLS_KEY), String.class))
+                .tools(VariableUtils.safeList(params.get(AI_TOOLS_KEY)))
                 .build();
     }
 

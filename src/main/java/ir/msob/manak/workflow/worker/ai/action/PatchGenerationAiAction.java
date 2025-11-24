@@ -3,10 +3,10 @@ package ir.msob.manak.workflow.worker.ai.action;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
+import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.domain.model.workflow.dto.DiffPatchData;
 import ir.msob.manak.workflow.client.ChatClient;
 import ir.msob.manak.workflow.worker.ai.AiActionHandler;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
@@ -34,8 +34,8 @@ public class PatchGenerationAiAction extends AiActionHandler {
     @Override
     @SneakyThrows
     protected Mono<Map<String, Object>> prepareResult(String aiResponse, Map<String, Object> params) {
-        String workflowId = VariableHelper.safeString(params.get(WORKFLOW_ID_KEY));
-        String cycleId = VariableHelper.safeString(params.get(CYCLE_ID_KEY));
+        String workflowId = VariableUtils.safeString(params.get(WORKFLOW_ID_KEY));
+        String cycleId = VariableUtils.safeString(params.get(CYCLE_ID_KEY));
 
         logger.debug("Starting PatchGenerationAiAction. workflowId={}, cycleId={}", workflowId, cycleId);
 

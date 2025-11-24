@@ -6,11 +6,12 @@ import ir.msob.jima.core.commons.exception.datanotfound.DataNotFoundException;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
+import ir.msob.manak.domain.model.util.VariableUtils;
+import ir.msob.manak.domain.model.worker.WorkerUtils;
 import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
 import ir.msob.manak.workflow.camunda.CamundaService;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,7 @@ public class WorkflowCompleteSuccessWorker {
     @JobWorker(type = "workflow-complete-success", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
-        String workflowId = VariableHelper.safeString(vars.get(WORKFLOW_ID_KEY));
+        String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
 
         logger.info("Starting workflow completion job. jobKey={}, workflowId={}", job.getKey(), workflowId);
 
@@ -78,7 +79,7 @@ public class WorkflowCompleteSuccessWorker {
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Workflow completion job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
         return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
-                .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
+                .then(camundaService.complete(job, WorkerUtils.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));
     }
 }

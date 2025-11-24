@@ -17,8 +17,6 @@ public class Constants {
     public static final String CYCLE_EXECUTION_STATUS_KEY = "cycleExecutionStatus";
     public static final String STAGE_EXECUTION_STATUS_KEY = "stageExecutionStatus";
     public static final String STAGE_EXECUTION_ERROR_KEY = "stageExecutionError";
-    public static final String WORKER_EXECUTION_STATUS_KEY = "workerExecutionStatus";
-    public static final String WORKER_EXECUTION_ERROR_KEY = "workerExecutionError";
     public static final String WORKFLOW_CONTEXT_KEY = "workflowContext";
     public static final String CYCLE_CONTEXT_KEY = "cycleContext";
     public static final String PROCESS_VARIABLE_KEY = "processVariable";

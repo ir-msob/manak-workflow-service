@@ -6,12 +6,13 @@ import ir.msob.jima.core.commons.exception.datanotfound.DataNotFoundException;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
+import ir.msob.manak.domain.model.util.VariableUtils;
+import ir.msob.manak.domain.model.worker.WorkerUtils;
 import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecification;
 import ir.msob.manak.workflow.camunda.CamundaService;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import ir.msob.manak.workflow.worker.util.WorkflowUtil;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.RequiredArgsConstructor;
@@ -40,13 +41,13 @@ public class StagePostProcessingWorker {
     @JobWorker(type = "stage-post-processing", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
-        String workflowId = VariableHelper.safeString(vars.get(WORKFLOW_ID_KEY));
-        String cycleId = VariableHelper.safeString(vars.get(CYCLE_ID_KEY));
-        String stageKey = VariableHelper.safeString(vars.get(STAGE_KEY_KEY));
-        String stageExecutionStatus = VariableHelper.safeString(vars.get(STAGE_EXECUTION_STATUS_KEY));
-        String stageExecutionError = VariableHelper.safeString(vars.get(STAGE_EXECUTION_ERROR_KEY));
-        String stageHistoryId = VariableHelper.safeString(vars.get(STAGE_HISTORY_ID_KEY));
-        Map<String, Object> stageOutput = VariableHelper.safeMapStringObject(vars.get(STAGE_OUTPUT_KEY));
+        String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
+        String cycleId = VariableUtils.safeString(vars.get(CYCLE_ID_KEY));
+        String stageKey = VariableUtils.safeString(vars.get(STAGE_KEY_KEY));
+        String stageExecutionStatus = VariableUtils.safeString(vars.get(STAGE_EXECUTION_STATUS_KEY));
+        String stageExecutionError = VariableUtils.safeString(vars.get(STAGE_EXECUTION_ERROR_KEY));
+        String stageHistoryId = VariableUtils.safeString(vars.get(STAGE_HISTORY_ID_KEY));
+        Map<String, Object> stageOutput = VariableUtils.safeMapStringObject(vars.get(STAGE_OUTPUT_KEY));
 
         logger.info("Starting stage post-processing job. jobKey={}, workflowId={}, stageKey={}", job.getKey(), workflowId, stageKey);
 
@@ -229,7 +230,7 @@ public class StagePostProcessingWorker {
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Post-processing job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
         return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
-                .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
+                .then(camundaService.complete(job, WorkerUtils.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));
     }
 }

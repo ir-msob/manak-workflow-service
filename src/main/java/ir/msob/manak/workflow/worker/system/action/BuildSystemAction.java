@@ -1,9 +1,9 @@
 package ir.msob.manak.workflow.worker.system.action;
 
 
+import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.domain.model.workflow.dto.RepositoryBranch;
 import ir.msob.manak.workflow.worker.system.SystemActionHandler;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -20,7 +20,7 @@ public class BuildSystemAction implements SystemActionHandler {
 
     @Override
     public Mono<Map<String, Object>> execute(Map<String, Object> params) {
-        List<RepositoryBranch> repositoryBranchLes = VariableHelper.safeList(params.get(REPOSITORY_BRANCHES_KEY), RepositoryBranch.class);
+        List<RepositoryBranch> repositoryBranchLes = VariableUtils.safeList(params.get(REPOSITORY_BRANCHES_KEY));
 
         return null;
     }

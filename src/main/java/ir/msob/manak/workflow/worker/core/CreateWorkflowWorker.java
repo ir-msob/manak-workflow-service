@@ -5,12 +5,13 @@ import io.camunda.client.api.response.ActivatedJob;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
+import ir.msob.manak.domain.model.util.VariableUtils;
+import ir.msob.manak.domain.model.worker.WorkerUtils;
 import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
 import ir.msob.manak.domain.model.workflow.workflowspecification.WorkflowSpecificationDto;
 import ir.msob.manak.workflow.camunda.CamundaService;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import ir.msob.manak.workflow.workflowspecification.WorkflowSpecificationService;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +47,7 @@ public class CreateWorkflowWorker {
     @JobWorker(type = "create-workflow", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
-        String workflowSpecificationId = VariableHelper.safeString(vars.get(WORKFLOW_SPECIFICATION_ID_KEY));
+        String workflowSpecificationId = VariableUtils.safeString(vars.get(WORKFLOW_SPECIFICATION_ID_KEY));
 
         // Log the start of the job execution
         logger.info("Starting 'create-workflow' job. jobKey={} workflowSpecificationId={}", job.getKey(), workflowSpecificationId);
@@ -85,7 +86,7 @@ public class CreateWorkflowWorker {
     private WorkflowDto prepareWorkflow(WorkflowSpecificationDto spec, Map<String, Object> vars) {
         return WorkflowDto.builder()
                 .specification(spec)
-                .correlationId(VariableHelper.safeString(vars.get(CORRELATION_ID_KEY)))
+                .correlationId(VariableUtils.safeString(vars.get(CORRELATION_ID_KEY)))
                 .executionStatus(Workflow.WorkflowExecutionStatus.IN_PROGRESS)
                 .startedAt(Instant.now())
                 .build();
@@ -94,7 +95,7 @@ public class CreateWorkflowWorker {
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Create workflow job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
         return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
-                .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
+                .then(camundaService.complete(job, WorkerUtils.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));
     }
 }

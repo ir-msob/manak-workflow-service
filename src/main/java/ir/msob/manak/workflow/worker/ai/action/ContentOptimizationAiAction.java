@@ -2,9 +2,9 @@ package ir.msob.manak.workflow.worker.ai.action;
 
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
+import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.workflow.client.ChatClient;
 import ir.msob.manak.workflow.worker.ai.AiActionHandler;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -27,8 +27,8 @@ public class ContentOptimizationAiAction extends AiActionHandler {
     @Override
     protected Mono<Map<String, Object>> prepareResult(String aiResponse, Map<String, Object> params) {
 
-        String workflowId = VariableHelper.safeString(params.get(WORKFLOW_ID_KEY));
-        String cycleId = VariableHelper.safeString(params.get(CYCLE_ID_KEY));
+        String workflowId = VariableUtils.safeString(params.get(WORKFLOW_ID_KEY));
+        String cycleId = VariableUtils.safeString(params.get(CYCLE_ID_KEY));
 
         logger.info("Starting ContentOptimizationAiAction. workflowId={}, cycleId={}", workflowId, cycleId);
 

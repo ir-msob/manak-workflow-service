@@ -96,7 +96,7 @@ public class ConditionEvaluator {
         }
 
         // If expected is a Map -> operator-based
-        if (expected instanceof Map<?,?> map) {
+        if (expected instanceof Map<?, ?> map) {
             Map<String, Object> opMap = (Map<String, Object>) map;
             for (Map.Entry<String, Object> op : opMap.entrySet()) {
                 String operator = op.getKey();

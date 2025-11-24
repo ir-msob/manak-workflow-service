@@ -6,10 +6,11 @@ import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.core.service.jima.security.UserService;
 import ir.msob.manak.core.service.jima.service.IdService;
+import ir.msob.manak.domain.model.util.VariableUtils;
+import ir.msob.manak.domain.model.worker.WorkerUtils;
 import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.model.workflow.workflow.Workflow;
 import ir.msob.manak.workflow.camunda.CamundaService;
-import ir.msob.manak.workflow.worker.util.VariableHelper;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -43,7 +44,7 @@ public class CreateCycleWorker {
     @JobWorker(type = "create-cycle", autoComplete = false)
     public Mono<Void> execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
-        String workflowId = VariableHelper.safeString(vars.get(WORKFLOW_ID_KEY));
+        String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
 
         // Log the start of the job execution
         logger.info("Starting 'create-cycle' job. jobKey={} workflowId={}", job.getKey(), workflowId);
@@ -88,7 +89,7 @@ public class CreateCycleWorker {
     private Mono<Void> handleErrorAndReThrow(ActivatedJob job, String workflowId, Throwable ex) {
         String errorMessage = "Create cycle job failed. jobKey=" + job.getKey() + " error=" + ex.getMessage();
         return workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.ERROR, errorMessage)
-                .then(camundaService.complete(job, VariableHelper.prepareErrorResult(errorMessage)))
+                .then(camundaService.complete(job, WorkerUtils.prepareErrorResult(errorMessage)))
                 .then(Mono.error(ex));
     }
 }
