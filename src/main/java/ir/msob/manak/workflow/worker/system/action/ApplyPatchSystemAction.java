@@ -1,10 +1,9 @@
 package ir.msob.manak.workflow.worker.system.action;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
-import ir.msob.manak.domain.model.rms.dto.PullRequestInfo;
+import ir.msob.manak.domain.model.rms.dto.ScmResult;
 import ir.msob.manak.domain.model.toolhub.dto.InvokeResponse;
 import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
@@ -24,7 +23,7 @@ import static ir.msob.manak.domain.model.worker.Constants.WORKER_EXECUTION_STATU
 
 @Component
 @RequiredArgsConstructor
-public class CreatePullRequestSystemAction implements SystemActionHandler, ToolHandler {
+public class ApplyPatchSystemAction implements SystemActionHandler, ToolHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplyPatchSystemAction.class);
 
@@ -37,15 +36,14 @@ public class CreatePullRequestSystemAction implements SystemActionHandler, ToolH
     public Mono<Map<String, Object>> execute(Map<String, Object> params) {
         Map<String, Object> toolInput = Map.of(
                 REPOSITORY_ID_KEY, VariableUtils.safeString(params.get(REPOSITORY_ID_KEY)),
-                SOURCE_BRANCH_KEY, VariableUtils.safeString(params.get(SOURCE_BRANCH_KEY)),
-                TARGET_BRANCH_KEY, VariableUtils.safeString(params.get(TARGET_BRANCH_KEY)),
-                TITLE_KEY, VariableUtils.safeString(params.get(TITLE_KEY)),
-                DESCRIPTION_KEY, VariableUtils.safeString(params.get(DESCRIPTION_KEY))
+                BRANCH_KEY, VariableUtils.safeString(params.get(BRANCH_KEY)),
+                PATCH_KEY, VariableUtils.safeString(params.get(PATCH_KEY)),
+                COMMIT_MESSAGE_KEY, VariableUtils.safeString(params.get(COMMIT_MESSAGE_KEY))
         );
-        logger.info("CreatePullRequest started. toolInput={}", toolInput);
+        logger.info("ApplyPatch started. toolInput={}", toolInput);
 
-        return invoke("Repository:CreatePullRequest:1.0.0", toolInput)
-                .doOnError(ex -> logger.error("CreatePullRequest failed: {}", ex.getMessage(), ex));
+        return invoke("Repository:ApplyPatch:1.0.0", toolInput)
+                .doOnError(ex -> logger.error("ApplyPatch failed: {}", ex.getMessage(), ex));
     }
 
 
@@ -59,9 +57,9 @@ public class CreatePullRequestSystemAction implements SystemActionHandler, ToolH
 
 
     @SneakyThrows
-    private Mono<PullRequestInfo> castResult(InvokeResponse response) {
+    private Mono<ScmResult> castResult(InvokeResponse response) {
         return response.getResult() == null
                 ? Mono.empty()
-                : Mono.just(objectMapper.convertValue(response.getResult(), PullRequestInfo.class));
+                : Mono.just(objectMapper.convertValue(response.getResult(), ScmResult.class));
     }
 }

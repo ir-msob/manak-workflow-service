@@ -1,32 +1,65 @@
 package ir.msob.manak.workflow.worker.system.action;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ir.msob.jima.core.commons.logger.Logger;
+import ir.msob.jima.core.commons.logger.LoggerFactory;
+import ir.msob.manak.domain.model.rms.dto.BranchRef;
+import ir.msob.manak.domain.model.toolhub.dto.InvokeResponse;
 import ir.msob.manak.domain.model.util.VariableUtils;
-import ir.msob.manak.domain.model.workflow.dto.RepositoryBranch;
+import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
+import ir.msob.manak.domain.service.toolhub.ToolInvoker;
+import ir.msob.manak.workflow.worker.common.ToolHandler;
 import ir.msob.manak.workflow.worker.system.SystemActionHandler;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Map;
 
-import static ir.msob.manak.workflow.worker.Constants.REPOSITORY_BRANCHES_KEY;
+import static ir.msob.manak.domain.model.rms.RmsConstants.*;
+import static ir.msob.manak.domain.model.worker.Constants.WORKER_EXECUTION_STATUS_KEY;
 
 @Component
 @RequiredArgsConstructor
-public class CreateBranchSystemAction implements SystemActionHandler {
+public class CreateBranchSystemAction implements SystemActionHandler, ToolHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(ApplyPatchSystemAction.class);
+
+    @Getter
+    private final ToolInvoker toolInvoker;
+    @Getter
+    private final ObjectMapper objectMapper;
 
     @Override
     public Mono<Map<String, Object>> execute(Map<String, Object> params) {
-        List<RepositoryBranch> repositoryBranchLes = VariableUtils.safeList(params.get(REPOSITORY_BRANCHES_KEY));
+        Map<String, Object> toolInput = Map.of(
+                REPOSITORY_ID_KEY, VariableUtils.safeString(params.get(REPOSITORY_ID_KEY)),
+                BASE_BRANCH_KEY, VariableUtils.safeString(params.get(BASE_BRANCH_KEY)),
+                NEW_BRANCH_NAME_KEY, VariableUtils.safeString(params.get(NEW_BRANCH_NAME_KEY))
+        );
+        logger.info("CreateBranch started. toolInput={}", toolInput);
 
-        return null;
+        return invoke("Repository:CreateBranch:1.0.0", toolInput)
+                .doOnError(ex -> logger.error("CreateBranch failed: {}", ex.getMessage(), ex));
     }
 
-    private Mono<Map<String, Object>> prepareResult() {
-        return Mono.just(Map.of());
+
+    @Override
+    public Mono<Map<String, Object>> prepareSuccessResult(InvokeResponse invokeResponse) {
+        return castResult(invokeResponse)
+                .map(res -> Map.of(
+                        WORKER_EXECUTION_STATUS_KEY, WorkerExecutionStatus.SUCCESS
+                ));
     }
 
 
+    @SneakyThrows
+    private Mono<BranchRef> castResult(InvokeResponse response) {
+        return response.getResult() == null
+                ? Mono.empty()
+                : Mono.just(objectMapper.convertValue(response.getResult(), BranchRef.class));
+    }
 }

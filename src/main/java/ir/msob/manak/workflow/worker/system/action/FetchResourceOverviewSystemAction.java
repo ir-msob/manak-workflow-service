@@ -4,7 +4,7 @@ import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.domain.model.vectorhub.document.DocumentOverview;
 import ir.msob.manak.domain.model.vectorhub.repository.RepositoryOverview;
 import ir.msob.manak.domain.model.workflow.dto.ResourceOverview;
-import ir.msob.manak.workflow.client.VectorHubClient;
+import ir.msob.manak.domain.service.client.VectorHubClient;
 import ir.msob.manak.workflow.worker.system.SystemActionHandler;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;

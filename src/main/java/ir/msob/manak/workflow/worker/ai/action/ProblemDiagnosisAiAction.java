@@ -3,7 +3,7 @@ package ir.msob.manak.workflow.worker.ai.action;
 import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.domain.model.util.VariableUtils;
-import ir.msob.manak.workflow.client.ChatClient;
+import ir.msob.manak.domain.service.client.ChatClient;
 import ir.msob.manak.workflow.worker.ai.AiActionHandler;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import org.springframework.stereotype.Component;

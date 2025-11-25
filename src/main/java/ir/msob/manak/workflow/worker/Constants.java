@@ -34,6 +34,7 @@ public class Constants {
     public static final String AI_PROMPT_TEMPLATE_KEY = "aiPromptTemplate";
     public static final String AI_RESPONSE_SCHEMA_KEY = "aiResponseSchema";
     public static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+    public static final String APPLY_PATCH_MESSAGE_KEY = "applyPatchMessage";
 
     private Constants() {
     }

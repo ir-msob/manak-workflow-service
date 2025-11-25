@@ -9,7 +9,7 @@ import ir.msob.manak.domain.model.workflow.dto.DataRequirement;
 import ir.msob.manak.domain.model.workflow.dto.ResourceContent;
 import ir.msob.manak.domain.model.workflow.dto.ResourceOverview;
 import ir.msob.manak.domain.model.workflow.workflow.WorkflowDto;
-import ir.msob.manak.workflow.client.ChatClient;
+import ir.msob.manak.domain.service.client.ChatClient;
 import ir.msob.manak.workflow.worker.ai.AiActionHandler;
 import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.SneakyThrows;
