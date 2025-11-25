@@ -5,38 +5,31 @@ import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.domain.service.client.ChatClient;
 import ir.msob.manak.workflow.worker.ai.AiActionHandler;
-import ir.msob.manak.workflow.workflow.WorkflowService;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
-import static ir.msob.manak.workflow.worker.Constants.*;
+import static ir.msob.manak.workflow.worker.Constants.REQUEST_ID_KEY;
+import static ir.msob.manak.workflow.worker.Constants.SOLUTION_KEY;
 
 @Component
 public class ProblemDiagnosisAiAction extends AiActionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ProblemDiagnosisAiAction.class);
-    private final WorkflowService workflowService;
 
-    public ProblemDiagnosisAiAction(ChatClient chatClient, WorkflowService workflowService) {
+    public ProblemDiagnosisAiAction(ChatClient chatClient) {
         super(chatClient);
-        this.workflowService = workflowService;
     }
 
     @Override
     protected Mono<Map<String, Object>> prepareResult(String aiResponse, Map<String, Object> params) {
+        String requestId = VariableUtils.safeString(params.get(REQUEST_ID_KEY));
 
-        String workflowId = VariableUtils.safeString(params.get(WORKFLOW_ID_KEY));
-        String cycleId = VariableUtils.safeString(params.get(CYCLE_ID_KEY));
+        logger.info("ProblemDiagnosis AI action started. requestId={}", requestId);
 
-        logger.info("Starting ProblemDiagnosisAiAction. workflowId={}, cycleId={}", workflowId, cycleId);
-
-        Map<String, Object> resultMap = Map.of(SOLUTION_KEY, aiResponse);
-
-        return workflowService.updateCycleContext(workflowId, cycleId, resultMap)
-                .doOnSuccess(v -> logger.info("Cycle context updated successfully. workflowId={}, cycleId={}", workflowId, cycleId))
-                .doOnError(ex -> logger.error("Failed to update cycle context. workflowId={}, cycleId={}", workflowId, cycleId, ex))
-                .then(Mono.just(resultMap));
+        return Mono.just(Map.of(
+                SOLUTION_KEY, aiResponse
+        ));
     }
 }

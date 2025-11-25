@@ -3,6 +3,7 @@ package ir.msob.manak.workflow.worker;
 import java.util.regex.Pattern;
 
 public class Constants {
+    public static final String REQUEST_ID_KEY = "requestId";
     public static final String ACTION_KEY = "action";
     public static final String PARAMS_KEY = "params";
     public static final String WORKFLOW_SPECIFICATION_ID_KEY = "workflowSpecificationId";

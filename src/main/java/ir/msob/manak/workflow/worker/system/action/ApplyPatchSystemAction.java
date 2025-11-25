@@ -6,7 +6,6 @@ import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.domain.model.rms.dto.ScmResult;
 import ir.msob.manak.domain.model.toolhub.dto.InvokeResponse;
 import ir.msob.manak.domain.model.util.VariableUtils;
-import ir.msob.manak.domain.model.workflow.WorkerExecutionStatus;
 import ir.msob.manak.domain.service.toolhub.ToolInvoker;
 import ir.msob.manak.workflow.worker.common.ToolHandler;
 import ir.msob.manak.workflow.worker.system.SystemActionHandler;
@@ -19,7 +18,6 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 import static ir.msob.manak.domain.model.rms.RmsConstants.*;
-import static ir.msob.manak.domain.model.worker.Constants.WORKER_EXECUTION_STATUS_KEY;
 
 @Component
 @RequiredArgsConstructor
@@ -51,7 +49,6 @@ public class ApplyPatchSystemAction implements SystemActionHandler, ToolHandler 
     public Mono<Map<String, Object>> prepareSuccessResult(InvokeResponse invokeResponse) {
         return castResult(invokeResponse)
                 .map(res -> Map.of(
-                        WORKER_EXECUTION_STATUS_KEY, WorkerExecutionStatus.SUCCESS
                 ));
     }
 

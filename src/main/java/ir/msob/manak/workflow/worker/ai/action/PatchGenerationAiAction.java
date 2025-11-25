@@ -14,7 +14,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
-import static ir.msob.manak.workflow.worker.Constants.*;
+import static ir.msob.manak.workflow.worker.Constants.REPOSITORY_DIFF_PATCHES_KEY;
+import static ir.msob.manak.workflow.worker.Constants.REQUEST_ID_KEY;
 
 @Component
 public class PatchGenerationAiAction extends AiActionHandler {
@@ -34,25 +35,22 @@ public class PatchGenerationAiAction extends AiActionHandler {
     @Override
     @SneakyThrows
     protected Mono<Map<String, Object>> prepareResult(String aiResponse, Map<String, Object> params) {
-        String workflowId = VariableUtils.safeString(params.get(WORKFLOW_ID_KEY));
-        String cycleId = VariableUtils.safeString(params.get(CYCLE_ID_KEY));
+        String requestId = VariableUtils.safeString(params.get(REQUEST_ID_KEY));
 
-        logger.debug("Starting PatchGenerationAiAction. workflowId={}, cycleId={}", workflowId, cycleId);
 
+        logger.debug("Starting PatchGenerationAiAction. requestId={}", requestId);
         return parseAiResponse(aiResponse)
                 .doOnNext(parsed ->
-                        logger.info("AI response successfully parsed. workflowId={}, cycleId={}", workflowId, cycleId)
+                        logger.info("AI response successfully parsed. requestId={}", requestId)
                 )
                 .flatMap(this::prepareMap)
-                .flatMap(result -> workflowService.updateCycleContext(workflowId, cycleId, result)
-                        .then(Mono.just(result)))
                 .doOnError(e ->
-                        logger.error("PatchGenerationAiAction failed. workflowId={}, cycleId={}, error={}",
-                                workflowId, cycleId, e.getMessage())
+                        logger.error("PatchGenerationAiAction failed. requestId={}, error={}",
+                                requestId, e.getMessage())
                 )
                 .doOnSuccess(res ->
-                        logger.debug("PatchGenerationAiAction completed successfully. workflowId={}, cycleId={}",
-                                workflowId, cycleId)
+                        logger.debug("PatchGenerationAiAction completed successfully. requestId={}",
+                                requestId)
                 );
     }
 
