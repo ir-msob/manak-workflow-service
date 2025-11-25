@@ -25,7 +25,7 @@ import static ir.msob.manak.domain.model.rms.RmsConstants.REPOSITORY_ID_KEY;
 @RequiredArgsConstructor
 public class MergePullRequestSystemAction implements SystemActionHandler, ToolHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApplyPatchSystemAction.class);
+    private static final Logger logger = LoggerFactory.getLogger(MergePullRequestSystemAction.class);
 
     @Getter
     private final ToolInvoker toolInvoker;

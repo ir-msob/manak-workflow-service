@@ -52,8 +52,7 @@ public class WorkflowDataProvider extends DomainCrudDataProvider<Workflow, Workf
      * Creates a new DTO object with mandatory fields set.
      */
     public static WorkflowDto prepareMandatoryDto() {
-        WorkflowDto dto = new WorkflowDto();
-        return dto;
+        return new WorkflowDto();
     }
 
     /**

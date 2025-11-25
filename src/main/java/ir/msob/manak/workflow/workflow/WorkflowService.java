@@ -111,7 +111,7 @@ public class WorkflowService extends DomainCrudService<Workflow, WorkflowDto, Wo
                                                 String cycleId,
                                                 Map<String, Object> params) {
 
-        return getOne(workflowId, userService.getSystemUser())
+        return this.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new IllegalStateException(
                         "Workflow not found. Id=" + workflowId)))
                 .flatMap(workflowDto -> {
@@ -133,7 +133,7 @@ public class WorkflowService extends DomainCrudService<Workflow, WorkflowDto, Wo
                         context.putAll(params);
                     }
 
-                    return update(workflowDto, userService.getSystemUser());
+                    return this.update(workflowDto, userService.getSystemUser());
                 })
                 .doOnError(e ->
                         logger.warn("Failed to update cycle context: workflowId={}, cycleId={}, error={}",

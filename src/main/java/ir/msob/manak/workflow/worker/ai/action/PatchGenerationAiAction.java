@@ -7,7 +7,6 @@ import ir.msob.manak.domain.model.util.VariableUtils;
 import ir.msob.manak.domain.model.workflow.dto.DiffPatchData;
 import ir.msob.manak.domain.service.client.ChatClient;
 import ir.msob.manak.workflow.worker.ai.AiActionHandler;
-import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -22,14 +21,11 @@ public class PatchGenerationAiAction extends AiActionHandler {
     private static final Logger logger = LoggerFactory.getLogger(PatchGenerationAiAction.class);
 
     private final ObjectMapper objectMapper;
-    private final WorkflowService workflowService;
 
     public PatchGenerationAiAction(ChatClient chatClient,
-                                   ObjectMapper objectMapper,
-                                   WorkflowService workflowService) {
+                                   ObjectMapper objectMapper) {
         super(chatClient);
         this.objectMapper = objectMapper;
-        this.workflowService = workflowService;
     }
 
     @Override

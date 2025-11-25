@@ -24,7 +24,7 @@ import static ir.msob.manak.domain.model.rms.RmsConstants.*;
 @RequiredArgsConstructor
 public class CreatePullRequestSystemAction implements SystemActionHandler, ToolHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(ApplyPatchSystemAction.class);
+    private static final Logger logger = LoggerFactory.getLogger(CreatePullRequestSystemAction.class);
 
     @Getter
     private final ToolInvoker toolInvoker;
