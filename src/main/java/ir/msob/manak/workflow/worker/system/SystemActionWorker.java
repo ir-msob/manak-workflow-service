@@ -6,6 +6,7 @@ import ir.msob.jima.core.commons.logger.Logger;
 import ir.msob.jima.core.commons.logger.LoggerFactory;
 import ir.msob.manak.workflow.camunda.CamundaService;
 import ir.msob.manak.workflow.worker.common.ActionWorker;
+import ir.msob.manak.workflow.workflow.WorkflowService;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +19,8 @@ public class SystemActionWorker extends ActionWorker {
     @Getter
     private final SystemActionRegistry actionRegistry;
 
-    public SystemActionWorker(CamundaService camundaService, SystemActionRegistry actionRegistry) {
-        super(camundaService);
+    public SystemActionWorker(CamundaService camundaService, WorkflowService workflowService, SystemActionRegistry actionRegistry) {
+        super(camundaService, workflowService);
         this.actionRegistry = actionRegistry;
     }
 
