@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -27,61 +28,68 @@ import static ir.msob.manak.workflow.worker.Constants.RESOURCE_CONTENTS_KEY;
 @Component
 @RequiredArgsConstructor
 public class FetchResourceContentSystemAction implements SystemActionHandler, ToolHandler {
+
     private static final Logger logger = LoggerFactory.getLogger(FetchResourceContentSystemAction.class);
 
     @Getter
     private final ToolInvoker toolInvoker;
+
     @Getter
     private final ObjectMapper objectMapper;
 
 
     @Override
     public Mono<Map<String, Object>> execute(Map<String, Object> params) {
-        List<ResourceContent> resources = VariableUtils.safeList(params.get(RESOURCE_CONTENTS_KEY));
+        List<ResourceContent> resources =
+                VariableUtils.safeList(params.get(RESOURCE_CONTENTS_KEY));
 
-        Map<String, Object> toolInput = Map.of(
-                REPOSITORY_ID_KEY, VariableUtils.safeString(params.get(REPOSITORY_ID_KEY)),
-                FILE_PATH_KEY, VariableUtils.safeString(params.get(FILE_PATH_KEY)),
-                BRANCH_KEY, VariableUtils.safeString(params.get(BRANCH_KEY))
-        );
-        logger.info("GetFileContent started. toolInput={}", toolInput);
+        logger.info("FetchResourceContent execution started. {} resources to process.", resources.size());
 
-        List<ResourceContent> resourcesUpdated = resources.stream()
-                .flatMap(resourceContent -> calInvoce(resourceContent, params))
-                .toList();
-
-        return Mono.just(Map.of(
-                RESOURCE_CONTENTS_KEY, resourcesUpdated
-        ));
-
+        return Flux.fromIterable(resources)
+                .flatMap(resourceContent -> fetchContentIfNeeded(resourceContent, params))
+                .collectList()
+                .map(updated -> Map.of(RESOURCE_CONTENTS_KEY, updated));
     }
 
 
-    private Mono<ResourceContent> calInvoce(ResourceContent resourceContent, Map<String, Object> params) {
+    private Mono<ResourceContent> fetchContentIfNeeded(ResourceContent resourceContent,
+                                                       Map<String, Object> params) {
+
+        // if content already exists → return as is
         if (Strings.isNotBlank(resourceContent.getContent())) {
+            logger.debug("Content exists. Skipping fetch for: {}", resourceContent.getPath());
             return Mono.just(resourceContent);
         }
 
+        // build tool input
         Map<String, Object> toolInput = Map.of(
                 REPOSITORY_ID_KEY, VariableUtils.safeString(params.get(REPOSITORY_ID_KEY)),
-                FILE_PATH_KEY, VariableUtils.safeString(params.get(FILE_PATH_KEY)),
+                FILE_PATH_KEY, VariableUtils.safeString(resourceContent.getPath()),
                 BRANCH_KEY, VariableUtils.safeString(params.get(BRANCH_KEY))
         );
 
+        logger.info("Fetching content for file: {}", resourceContent.getPath());
+
         return invoke("Repository:GetFileContent:1.0.0", toolInput)
-                .flatMap(stringObjectMap -> {
-                    resourceContent.setContent(VariableUtils.safeString(stringObjectMap.get(CONTENT_KEY)));
+                .flatMap(resultMap -> {
+                    resourceContent.setContent(
+                            VariableUtils.safeString(resultMap.get(CONTENT_KEY))
+                    );
+                    logger.debug("Content fetched for file: {}", resourceContent.getPath());
                     return Mono.just(resourceContent);
                 })
-                .doOnError(ex -> logger.error("CreateBranch failed: {}", ex.getMessage(), ex));
+                .doOnError(ex -> logger.error(
+                        "Failed to fetch content for file {}: {}",
+                        resourceContent.getPath(),
+                        ex.getMessage(), ex
+                ));
     }
+
 
     @Override
     public Mono<Map<String, Object>> prepareSuccessResult(InvokeResponse invokeResponse) {
         return castResult(invokeResponse)
-                .map(res -> Map.of(
-                        CONTENT_KEY, res.getContent()
-                ));
+                .map(res -> Map.of(CONTENT_KEY, res.getContent()));
     }
 
 
