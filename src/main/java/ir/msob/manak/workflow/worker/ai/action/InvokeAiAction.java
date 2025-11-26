@@ -10,26 +10,26 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
-import static ir.msob.manak.workflow.worker.Constants.OPTIMIZED_CONTENT_KEY;
-import static ir.msob.manak.workflow.worker.Constants.REQUEST_ID_KEY;
+import static ir.msob.manak.workflow.worker.Constants.*;
 
 @Component
-public class ContentOptimizationAiAction extends AiActionHandler {
+public class InvokeAiAction extends AiActionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(ContentOptimizationAiAction.class);
+    private static final Logger logger = LoggerFactory.getLogger(InvokeAiAction.class);
 
-    public ContentOptimizationAiAction(ChatClient chatClient) {
+    public InvokeAiAction(ChatClient chatClient) {
         super(chatClient);
     }
 
     @Override
     protected Mono<Map<String, Object>> prepareResult(String aiResponse, Map<String, Object> params) {
         String requestId = VariableUtils.safeString(params.get(REQUEST_ID_KEY));
+        String aiResponsePlaceholder = VariableUtils.safeString(params.get(AI_RESPONSE_PLACEHOLDER_KEY));
 
-        logger.info("ContentOptimization AI action started. requestId={}", requestId);
+        logger.info("Invoke AI action started. requestId={}", requestId);
 
         return Mono.just(Map.of(
-                OPTIMIZED_CONTENT_KEY, aiResponse
+                aiResponsePlaceholder, aiResponse
         ));
     }
 }

@@ -4,6 +4,10 @@ import java.util.regex.Pattern;
 
 public class Constants {
     public static final String REQUEST_ID_KEY = "requestId";
+    public static final String AI_RESPONSE_PLACEHOLDER_KEY = "aiResponsePlaceholder";
+    public static final String CONVERT_VARIABLE_INPUT_PLACEHOLDER_KEY = "convertVariableInputPlaceholder";
+    public static final String CONVERT_VARIABLE_OUTPUT_PLACEHOLDER_KEY = "convertVariableOutputPlaceholder";
+    public static final String CONVERT_VARIABLE_TARGET_CLASS_KEY = "convertVariableTargetClass";
     public static final String ACTION_KEY = "action";
     public static final String PARAMS_KEY = "params";
     public static final String WORKFLOW_SPECIFICATION_ID_KEY = "workflowSpecificationId";
@@ -27,6 +31,8 @@ public class Constants {
     public static final String REPOSITORY_DIFF_PATCHES_KEY = "repositoryDiffPatches";
     public static final String RESOURCE_CONTENTS_KEY = "resourceContents";
     public static final String RESOURCE_OVERVIEWS_KEY = "resourceOverviews";
+    public static final String NEW_RESOURCE_CONTENTS_KEY = "newResourceContents";
+    public static final String NEW_RESOURCE_OVERVIEWS_KEY = "newResourceOverviews";
     public static final String SOLUTION_KEY = "solution";
     public static final String CONTENT_KEY = "content";
     public static final String OPTIMIZED_CONTENT_KEY = "optimizedContent";
