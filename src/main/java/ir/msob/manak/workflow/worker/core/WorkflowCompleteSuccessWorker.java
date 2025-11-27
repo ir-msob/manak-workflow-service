@@ -38,13 +38,13 @@ public class WorkflowCompleteSuccessWorker {
      * Sends empty result map back to Camunda process.
      */
     @JobWorker(type = "workflow-complete-success", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
+    public void execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
 
         logger.info("Starting workflow completion job. jobKey={}, workflowId={}", job.getKey(), workflowId);
 
-        return workflowService.getOne(workflowId, userService.getSystemUser())
+         workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
                 .flatMap(this::prepareWorkflow)
                 .flatMap(workflow -> workflowService.update(workflow, userService.getSystemUser()))
@@ -52,7 +52,8 @@ public class WorkflowCompleteSuccessWorker {
                 .flatMap(result -> camundaService.complete(job, result))
                 .doOnSuccess(v -> logger.info("Workflow completion job finished successfully. jobKey={}", job.getKey()))
                 .doOnError(ex -> logger.error("Workflow completion job failed. jobKey={}, error={}", job.getKey(), ex.getMessage(), ex))
-                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
+                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex))
+                .subscribe();
     }
 
     /**

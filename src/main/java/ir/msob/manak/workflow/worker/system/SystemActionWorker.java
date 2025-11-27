@@ -27,7 +27,7 @@ public class SystemActionWorker extends ActionWorker {
     @Transactional
     @Override
     @JobWorker(type = "system-action", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
-        return super.execute(job);
+    public void execute(final ActivatedJob job) {
+        super.execute(job);
     }
 }

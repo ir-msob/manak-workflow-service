@@ -26,7 +26,7 @@ public class AiActionWorker extends ActionWorker {
     @Transactional
     @Override
     @JobWorker(type = "ai-execution", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
-        return super.execute(job);
+    public void execute(final ActivatedJob job) {
+         super.execute(job);
     }
 }

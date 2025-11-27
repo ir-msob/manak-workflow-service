@@ -39,7 +39,7 @@ public class StagePostProcessingWorker {
     private final CamundaService camundaService;
 
     @JobWorker(type = "stage-post-processing", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
+    public void execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
         String cycleId = VariableUtils.safeString(vars.get(CYCLE_ID_KEY));
@@ -51,7 +51,7 @@ public class StagePostProcessingWorker {
 
         logger.info("Starting stage post-processing job. jobKey={}, workflowId={}, stageKey={}", job.getKey(), workflowId, stageKey);
 
-        return workflowService.getOne(workflowId, userService.getSystemUser())
+         workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
                 .flatMap(workflow -> prepareStageHistory(workflow, stageHistoryId, cycleId, stageExecutionStatus, stageExecutionError, stageOutput))
                 .flatMap(workflow -> updateContext(workflow, stageKey, cycleId, stageOutput, vars))
@@ -65,7 +65,8 @@ public class StagePostProcessingWorker {
                 .flatMap(result -> camundaService.complete(job, result))
                 .doOnSuccess(v -> logger.info("Stage post-processing job completed successfully. jobKey={}", job.getKey()))
                 .doOnError(ex -> logger.error("Stage post-processing job failed. jobKey={}, error={}", job.getKey(), ex.getMessage(), ex))
-                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
+                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex))
+                .subscribe();
     }
 
     private Mono<WorkflowDto> prepareStageHistory(WorkflowDto workflow, String stageHistoryId, String cycleId, String stageExecutionStatus, String stageExecutionError, Map<String, Object> outputData) {

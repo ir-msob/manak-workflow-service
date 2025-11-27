@@ -45,7 +45,7 @@ public class CreateWorkflowWorker {
      * and then rethrows the exception to propagate the error.
      */
     @JobWorker(type = "create-workflow", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
+    public void execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowSpecificationId = VariableUtils.safeString(vars.get(WORKFLOW_SPECIFICATION_ID_KEY));
 
@@ -55,7 +55,7 @@ public class CreateWorkflowWorker {
         // Holder for workflow ID to use in error handling
         AtomicReference<String> workflowIdHolder = new AtomicReference<>();
 
-        return workflowSpecificationService.getOne(workflowSpecificationId, userService.getSystemUser())
+         workflowSpecificationService.getOne(workflowSpecificationId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new IllegalStateException("WorkflowSpecification not found: " + workflowSpecificationId)))
                 .map(spec -> prepareWorkflow(spec, vars))
                 .flatMap(workflowDto -> workflowService.save(workflowDto, userService.getSystemUser()))
@@ -69,7 +69,8 @@ public class CreateWorkflowWorker {
                 .flatMap(result -> camundaService.complete(job, result))
                 .doOnSuccess(v -> logger.info("Create workflow job completed successfully. jobKey={}", job.getKey()))
                 .doOnError(ex -> logger.error("Create workflow job failed. jobKey={} error={}", job.getKey(), ex.getMessage(), ex))
-                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowIdHolder.get(), ex));
+                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowIdHolder.get(), ex))
+                .subscribe();
     }
 
     private Mono<Void> recordWorkerHistory(WorkflowDto workflowDto) {

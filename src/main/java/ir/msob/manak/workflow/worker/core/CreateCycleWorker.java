@@ -42,7 +42,7 @@ public class CreateCycleWorker {
      * and then rethrows the exception to propagate the error.
      */
     @JobWorker(type = "create-cycle", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
+    public void execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
 
@@ -51,11 +51,11 @@ public class CreateCycleWorker {
 
         Workflow.Cycle cycle = prepareCycle();
 
-        return workflowService.getOne(workflowId, userService.getSystemUser())
+        workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new IllegalStateException("Workflow not found: " + workflowId)))
                 .flatMap(workflowDto -> {
                     workflowDto.getCycles().add(cycle); // Add the new cycle
-                    return workflowService.save(workflowDto, userService.getSystemUser());
+                    return workflowService.update(workflowDto, userService.getSystemUser());
                 })
                 .doOnSuccess(saved -> logger.info("Cycle created and workflow saved successfully. workflowId={}", saved.getId()))
                 .flatMap(savedWorkflow -> recordWorkerHistory(savedWorkflow.getId())
@@ -64,7 +64,8 @@ public class CreateCycleWorker {
                 .flatMap(result -> camundaService.complete(job, result))
                 .doOnSuccess(v -> logger.info("Job completed successfully. jobKey={}", job.getKey()))
                 .doOnError(ex -> logger.error("Job execution failed. jobKey={} error={}", job.getKey(), ex.getMessage(), ex))
-                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
+                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex))
+                .subscribe();
     }
 
     private Workflow.Cycle prepareCycle() {

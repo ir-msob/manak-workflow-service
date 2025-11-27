@@ -44,7 +44,7 @@ public class FlowCompleteErrorWorker {
      * and rethrows the exception.
      */
     @JobWorker(type = "flow-complete-error", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
+    public void execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
         String cycleId = VariableUtils.safeString(vars.get(CYCLE_ID_KEY));
@@ -52,7 +52,7 @@ public class FlowCompleteErrorWorker {
         // Log the start of the job execution
         logger.info("Starting 'flow-complete-error' job. jobKey={} workflowId={} cycleId={}", job.getKey(), workflowId, cycleId);
 
-        return workflowService.getOne(workflowId, userService.getSystemUser())
+         workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
                 .flatMap(this::prepareWorkflow)
                 .flatMap(workflowDto -> prepareCycle(workflowDto, cycleId))
@@ -61,7 +61,8 @@ public class FlowCompleteErrorWorker {
                 .flatMap(result -> camundaService.complete(job, result))
                 .doOnSuccess(v -> logger.info("Flow-complete-error job completed successfully. jobKey={} cycleId={}", job.getKey(), cycleId))
                 .doOnError(ex -> logger.error("Flow-complete-error job failed. jobKey={} cycleId={} error={}", job.getKey(), cycleId, ex.getMessage(), ex))
-                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
+                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex))
+                .subscribe();
     }
 
     private Mono<WorkflowDto> prepareWorkflow(WorkflowDto workflow) {

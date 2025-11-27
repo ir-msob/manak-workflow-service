@@ -91,7 +91,7 @@ public class WorkflowService extends DomainCrudService<Workflow, WorkflowDto, Wo
         return this.getOne(workflowId, userService.getSystemUser())
                 .flatMap(workflowDto -> {
                     workflowDto.getWorkersHistory().add(prepareWorkerHistory(status, error));
-                    return this.save(workflowDto, userService.getSystemUser()).then();
+                    return this.update(workflowDto, userService.getSystemUser()).then();
                 })
                 .doOnSuccess(v -> logger.info("Worker history updated for workflowId={} status={}", workflowId, status))
                 .doOnError(ex -> logger.error("Failed to update worker history for workflowId={} error={}", workflowId, ex.getMessage(), ex))

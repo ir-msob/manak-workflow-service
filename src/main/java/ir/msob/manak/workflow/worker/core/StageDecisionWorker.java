@@ -38,7 +38,7 @@ public class StageDecisionWorker {
     private final ConditionEvaluator conditionEvaluator;
 
     @JobWorker(type = "stage-decision", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
+    public void execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
         String cycleId = VariableUtils.safeString(vars.get(CYCLE_ID_KEY));
@@ -47,7 +47,7 @@ public class StageDecisionWorker {
 
         logger.info("Starting 'stage-decision' job. jobKey={} workflowId={} previousStageKey={}", job.getKey(), workflowId, previousStageKey);
 
-        return workflowService.getOne(workflowId, userService.getSystemUser())
+         workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
                 .flatMap(workflowDto -> determineNextStage(workflowDto, cycleId, previousStageHistoryId, previousStageKey, vars))
                 .flatMap(nextStage -> workflowService.recordWorkerHistory(workflowId, WorkerExecutionStatus.SUCCESS, null)
@@ -56,7 +56,8 @@ public class StageDecisionWorker {
                 .flatMap(result -> camundaService.complete(job, result))
                 .doOnSuccess(v -> logger.info("Stage-decision job completed successfully. jobKey={} previousStageKey={}", job.getKey(), previousStageKey))
                 .doOnError(ex -> logger.error("Stage-decision job failed. jobKey={} error={}", job.getKey(), ex.getMessage(), ex))
-                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
+                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex))
+                .subscribe();
     }
 
     private Mono<Map<String, Object>> prepareResult(WorkflowSpecification.StageSpec stageSpec) {

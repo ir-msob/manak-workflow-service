@@ -45,7 +45,7 @@ public class CycleCompleteSuccessWorker {
      * and rethrows the exception.
      */
     @JobWorker(type = "cycle-complete-success", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
+    public void execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
         String cycleId = VariableUtils.safeString(vars.get(CYCLE_ID_KEY));
@@ -53,7 +53,7 @@ public class CycleCompleteSuccessWorker {
         // Log the start of the job execution
         logger.info("Starting 'cycle-complete-success' job. jobKey={} workflowId={} cycleId={}", job.getKey(), workflowId, cycleId);
 
-        return workflowService.getOne(workflowId, userService.getSystemUser())
+         workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
                 .flatMap(workflowDto -> prepareCycle(workflowDto, cycleId))
                 .flatMap(workflow -> workflowService.update(workflow, userService.getSystemUser()))
@@ -61,7 +61,8 @@ public class CycleCompleteSuccessWorker {
                 .flatMap(result -> camundaService.complete(job, result))
                 .doOnSuccess(v -> logger.info("Cycle-complete-success job completed successfully. jobKey={} cycleId={}", job.getKey(), cycleId))
                 .doOnError(ex -> logger.error("Cycle-complete-success job failed. jobKey={} cycleId={} error={}", job.getKey(), cycleId, ex.getMessage(), ex))
-                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
+                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex))
+                .subscribe();
     }
 
     private Mono<WorkflowDto> prepareCycle(WorkflowDto workflow, String cycleId) {

@@ -51,7 +51,7 @@ public class StagePreProcessingWorker {
      * 5. Record worker history and prepare process variables for Camunda
      */
     @JobWorker(type = "stage-pre-processing", autoComplete = false)
-    public Mono<Void> execute(final ActivatedJob job) {
+    public void execute(final ActivatedJob job) {
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
         String cycleId = VariableUtils.safeString(vars.get(CYCLE_ID_KEY));
@@ -59,7 +59,7 @@ public class StagePreProcessingWorker {
 
         logger.info("Starting stage pre-processing job. jobKey={}, workflowId={}, stageKey={}", job.getKey(), workflowId, stageKey);
 
-        return workflowService.getOne(workflowId, userService.getSystemUser())
+        workflowService.getOne(workflowId, userService.getSystemUser())
                 .switchIfEmpty(Mono.error(new DataNotFoundException("Workflow not found: " + workflowId)))
                 .flatMap(workflow -> determineInputData(workflow, cycleId, stageKey, vars)
                         .flatMap(inputData -> createStageHistory(workflow, stageKey, inputData)
@@ -78,7 +78,8 @@ public class StagePreProcessingWorker {
                 .flatMap(result -> camundaService.complete(job, result))
                 .doOnSuccess(v -> logger.info("Pre-processing job completed successfully. jobKey={}", job.getKey()))
                 .doOnError(ex -> logger.error("Pre-processing job failed. jobKey={}, error={}", job.getKey(), ex.getMessage(), ex))
-                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex));
+                .onErrorResume(ex -> handleErrorAndReThrow(job, workflowId, ex))
+                .subscribe();
     }
 
     /**
@@ -189,7 +190,8 @@ public class StagePreProcessingWorker {
         return Mono.just(Map.of(
                 STAGE_HISTORY_ID_KEY, stageHistory.getId(),
                 STAGE_EXECUTION_STATUS_KEY, Workflow.StageExecutionStatus.INITIALIZED,
-                STAGE_EXECUTION_ERROR_KEY, ""
+                STAGE_EXECUTION_ERROR_KEY, "",
+                PARAMS_KEY, stageHistory.getStageInput()
         ));
     }
 

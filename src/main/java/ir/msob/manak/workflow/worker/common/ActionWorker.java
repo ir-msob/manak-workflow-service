@@ -26,7 +26,7 @@ public abstract class ActionWorker {
 
     protected abstract ActionRegistry getActionRegistry();
 
-    protected Mono<Void> execute(final ActivatedJob job) {
+    protected void execute(final ActivatedJob job) {
 
         Map<String, Object> vars = job.getVariablesAsMap();
         String workflowId = VariableUtils.safeString(vars.get(WORKFLOW_ID_KEY));
@@ -34,19 +34,19 @@ public abstract class ActionWorker {
 
         logger.info("ActionWorker started. jobKey={} workflowId={}", jobKey, workflowId);
 
-        String action = Optional.ofNullable(VariableUtils.safeString(vars.get(ACTION_KEY)))
-                .orElseThrow(() -> new IllegalArgumentException("Missing action key"));
-
-        logger.info("Action resolved. jobKey={} action={}", jobKey, action);
-
         Map<String, Object> params = Optional.ofNullable(VariableUtils.safeMapStringObject(vars.get(PARAMS_KEY)))
                 .orElseThrow(() -> new IllegalArgumentException("Missing params key"));
 
         logger.info("Parameters received. jobKey={} count={} params={}", jobKey, params.size(), params);
 
+        String action = Optional.ofNullable(VariableUtils.safeString(params.get(ACTION_KEY)))
+                .orElseThrow(() -> new IllegalArgumentException("Missing action key"));
+
+        logger.info("Action resolved. jobKey={} action={}", jobKey, action);
+
         ActionHandler actionHandler = getActionRegistry().getActionHandler(action);
 
-        return actionHandler.execute(params)
+        actionHandler.execute(params)
                 .flatMap(result -> {
                     logger.info("Action completed successfully. jobKey={} workflowId={}", jobKey, workflowId);
                     return recordWorkerHistory(workflowId).thenReturn(result);
@@ -58,7 +58,8 @@ public abstract class ActionWorker {
                     logger.error("Action execution FAILED. jobKey={} workflowId={} msg={}", jobKey, workflowId, ex.getMessage(), ex);
                     return handleErrorAndReThrow(job, workflowId, ex)
                             .then(Mono.error(ex));
-                });
+                })
+                .subscribe();
     }
 
     private Mono<Void> recordWorkerHistory(String workflowId) {
