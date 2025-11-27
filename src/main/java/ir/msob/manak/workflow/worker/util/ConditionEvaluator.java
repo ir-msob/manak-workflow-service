@@ -58,14 +58,14 @@ public class ConditionEvaluator {
         if (rawKey == null) return null;
         String key = rawKey.startsWith(VARIABLE_START_CHAR) ? rawKey.substring(1) : rawKey;
 
-        if (key.startsWith(WORKFLOW_CONTEXT_KEY + ".")) {
-            String path = key.substring((WORKFLOW_CONTEXT_KEY + ".").length());
+        if (key.startsWith(WORKFLOW_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+            String path = key.substring((WORKFLOW_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length());
             return getValueByPath(workflowContext, path);
-        } else if (key.startsWith(CYCLE_CONTEXT_KEY + ".")) {
-            String path = key.substring((CYCLE_CONTEXT_KEY + ".").length());
+        } else if (key.startsWith(CYCLE_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+            String path = key.substring((CYCLE_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length());
             return getValueByPath(cycleContext, path);
-        } else if (key.startsWith(PROCESS_VARIABLE_KEY + ".")) {
-            String path = key.substring((PROCESS_VARIABLE_KEY + ".").length());
+        } else if (key.startsWith(PROCESS_VARIABLE_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+            String path = key.substring((PROCESS_VARIABLE_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length());
             return getValueByPath(processVars, path);
         } else {
             // no prefix -> treat as stageOutput

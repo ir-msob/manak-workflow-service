@@ -110,16 +110,16 @@ public class StagePostProcessingWorker {
 
             String dest = destExpr.startsWith(VARIABLE_START_CHAR) ? destExpr.substring(1) : destExpr;
 
-            if (dest.startsWith(CYCLE_CONTEXT_KEY + ".")) {
-                String path = dest.substring((CYCLE_CONTEXT_KEY + ".").length());
+            if (dest.startsWith(CYCLE_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+                String path = dest.substring((CYCLE_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length());
                 setValueByPath(cycle.getContext(), path, value);
 
-            } else if (dest.startsWith(WORKFLOW_CONTEXT_KEY + ".")) {
-                String path = dest.substring((WORKFLOW_CONTEXT_KEY + ".").length());
+            } else if (dest.startsWith(WORKFLOW_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+                String path = dest.substring((WORKFLOW_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length());
                 setValueByPath(workflow.getContext(), path, value);
 
-            } else if (dest.startsWith(PROCESS_VARIABLE_KEY + ".")) {
-                String varName = dest.substring((PROCESS_VARIABLE_KEY + ".").length());
+            } else if (dest.startsWith(PROCESS_VARIABLE_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+                String varName = dest.substring((PROCESS_VARIABLE_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length());
                 processVarsToReturn.put(varName, value);
 
             } else {
@@ -159,16 +159,16 @@ public class StagePostProcessingWorker {
 
         String expr = srcStr.substring(1);
 
-        if (expr.startsWith(WORKFLOW_CONTEXT_KEY + ".")) {
-            String path = expr.substring((WORKFLOW_CONTEXT_KEY + ".").length());
+        if (expr.startsWith(WORKFLOW_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+            String path = expr.substring((WORKFLOW_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length());
             return getValueByPath(workflowContext, path);
 
-        } else if (expr.startsWith(CYCLE_CONTEXT_KEY + ".")) {
-            String path = expr.substring((CYCLE_CONTEXT_KEY + ".").length());
+        } else if (expr.startsWith(CYCLE_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+            String path = expr.substring((CYCLE_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length());
             return getValueByPath(cycleContext, path);
 
-        } else if (expr.startsWith(PROCESS_VARIABLE_KEY + ".")) {
-            String path = expr.substring((PROCESS_VARIABLE_KEY + ".").length());
+        } else if (expr.startsWith(PROCESS_VARIABLE_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+            String path = expr.substring((PROCESS_VARIABLE_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length());
             return getValueByPath(processVariable, path);
 
         } else {

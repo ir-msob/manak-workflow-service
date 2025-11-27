@@ -150,12 +150,12 @@ public class StagePreProcessingWorker {
         }
 
         String expr = mappingStr.substring(1);
-        if (expr.startsWith(WORKFLOW_CONTEXT_KEY + ".")) {
-            return getValueByPath(workflowContext, expr.substring((WORKFLOW_CONTEXT_KEY + ".").length()));
-        } else if (expr.startsWith(CYCLE_CONTEXT_KEY + ".")) {
-            return getValueByPath(cycleContext, expr.substring((CYCLE_CONTEXT_KEY + ".").length()));
-        } else if (expr.startsWith(PROCESS_VARIABLE_KEY + ".")) {
-            return getValueByPath(processVariable, expr.substring((PROCESS_VARIABLE_KEY + ".").length()));
+        if (expr.startsWith(WORKFLOW_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+            return getValueByPath(workflowContext, expr.substring((WORKFLOW_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length()));
+        } else if (expr.startsWith(CYCLE_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+            return getValueByPath(cycleContext, expr.substring((CYCLE_CONTEXT_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length()));
+        } else if (expr.startsWith(PROCESS_VARIABLE_KEY + VARIABLE_SEPARATOR_CHAR_CHAR)) {
+            return getValueByPath(processVariable, expr.substring((PROCESS_VARIABLE_KEY + VARIABLE_SEPARATOR_CHAR_CHAR).length()));
         }
         return null;
     }

@@ -26,6 +26,7 @@ public class Constants {
     public static final String CYCLE_CONTEXT_KEY = "cycleContext";
     public static final String PROCESS_VARIABLE_KEY = "processVariable";
     public static final String VARIABLE_START_CHAR = "$";
+    public static final String VARIABLE_SEPARATOR_CHAR_CHAR = ">";
     public static final String REPOSITORY_BRANCHES_KEY = "repositoryBranches";
     public static final String REPOSITORY_PULL_REQUESTS_KEY = "repositoryPullRequests";
     public static final String REPOSITORY_DIFF_PATCHES_KEY = "repositoryDiffPatches";
